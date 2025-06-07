@@ -4,7 +4,7 @@ from typing import Any
 import platform
 import yaml
 
-if platform.system() == 'Darwin':
+if platform.system() == 'darwin':
     from ocrmac import ocrmac
 
 @dataclass
