@@ -1,0 +1,30 @@
+regions:
+  Gegenstand: [0.047, 0, 1, 0.077]
+  Inv. Nr.: [0.047, 0.077, 0.275, 0.135]
+  Herkunft: [0.2737, 0.0806, 0.5054, 0.237]
+  Standort: [0.047, 0.135, 0.275, 0.235]
+  Material: [0.047, 0.237, 0.275, 0.435]
+  Datierung: [0.275, 0.237, 0.505, 0.317]
+  Maße: [0.275, 0.317, 0.505, 0.435]
+  erworben von: [0.047, 0.435, 0.505, 0.521]
+  Beschreibung: [0.047, 0.521, 0.505, 0.794]
+  Ausstellungen: [0.047, 0.795, 0.505, 1]
+  am: [0.505, 0.435, 0.707, 0.521]
+  Preis: [0.707, 0.435, 0.869, 0.521]
+  Vers.-Wert: [0.870, 0.435, 1.0, 0.521]
+  Literatur: [0.275, 0.522, 1.0, 1.0]
+
+# header_filters: 
+#   - "Vers.-Wert:"
+#   - "Vers.-Wert:;"
+#   - "Vers.—Wert:;"
+#   - "Vers.—Wert:"
+
+# file_skip_markers:
+#   - "Verso"
+#   - "verso"
+#   - "Zusatz"
+#   - "zusatz"
+
+# custom_header_mappings:
+#   am: 'erworben am'

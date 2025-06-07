@@ -1,0 +1,27 @@
+[project]
+name = "schmuck-inventar"
+version = "0.0.1"
+authors = [
+    { name = "Mathias Zinnen", email = "mathias.zinnen@gmail.com" }
+]
+
+description = "Read inventory cards, extract images, and create structured data."
+readme = "README.MD"
+requires-python= ">=3.8"
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "ultralytics",
+    "appdirs"
+]
+
+[tool.setuptools]
+packages = ["schmuck_inventar"]
+
+[project.scripts]
+schmuck-inventar = "schmuck_inventar.run:main"
