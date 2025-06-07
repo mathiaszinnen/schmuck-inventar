@@ -2,9 +2,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 import platform
+import numpy as np
+import cv2
+from PIL import Image
 import yaml
 
-if platform.system() == 'darwin':
+if platform.system() == 'Darwin':
     from ocrmac import ocrmac
 
 @dataclass
@@ -36,7 +39,7 @@ class CardRecognizer(ABC):
         with open(layout_config, 'r') as file:
             self.layout_dict = yaml.safe_load(file)['regions']
 
-    def _assign_region(self, ocr_result, layout_dict, iou_threshold=0.6):
+    def _assign_region(self, ocr_result, layout_dict, iou_threshold=0.55):
         """Assigns a region name to the OCR result based on the layout dictionary.
         Assigns a region if more than iou_threshold% of the OCR result area is within the region."""
         def calculate_area(box):
@@ -106,9 +109,12 @@ class CardRecognizer(ABC):
 
 class MacOSCardRecognizer(CardRecognizer):
     def _do_ocr(self, image):
-        results = ocrmac.OCR(image).recognize()
-        for result in results:
-            results.append(OCRResult.from_ocrmac_result(result))
+        if isinstance(image, np.ndarray):
+            image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        ocrmac_results = ocrmac.OCR(image).recognize()
+        results = []
+        for ocrmac_result in ocrmac_results:
+            results.append(OCRResult.from_ocrmac_result(ocrmac_result))
         return results
 
 class DummyCardRecognizer(CardRecognizer):
