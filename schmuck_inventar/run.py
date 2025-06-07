@@ -6,6 +6,7 @@ from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognize
 import platform
 import appdirs
 import cv2
+from tqdm import tqdm
 
 def pipeline(input_dir, output_dir, layout_config):
     print(f"Processing files in directory: {input_dir}")
@@ -17,7 +18,7 @@ def pipeline(input_dir, output_dir, layout_config):
         recognizer = DummyCardRecognizer(layout_config=layout_config)
         print("Using dummy recognizer, as this is not a Mac system.")
 
-    for filename in os.listdir(input_dir):
+    for filename in tqdm(os.listdir(input_dir)):
         file_path = os.path.join(input_dir, filename)
         image = cv2.imread(file_path)
         detections = detector.detect(image)

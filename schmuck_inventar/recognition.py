@@ -106,7 +106,6 @@ class CardRecognizer(ABC):
 
 class MacOSCardRecognizer(CardRecognizer):
     def _do_ocr(self, image):
-        # im_w, im_h,_ = image.shape
         results = ocrmac.OCR(image).recognize()
         for result in results:
             results.append(OCRResult.from_ocrmac_result(result))
