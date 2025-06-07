@@ -2,3 +2,4 @@
 .venv
 output/
 *.egg-info
+*.pyc
