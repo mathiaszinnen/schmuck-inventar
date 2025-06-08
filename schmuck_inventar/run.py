@@ -3,6 +3,7 @@ import os
 import sys
 from schmuck_inventar.detection import YoloImageDetector
 from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer
+from schmuck_inventar.postprocessor import PostProcessor
 import platform
 import appdirs
 from PIL import Image
@@ -19,10 +20,14 @@ def pipeline(input_dir, output_dir, layout_config):
     else:
         recognizer = DummyCardRecognizer(layout_config=layout_config)
         print("Using dummy recognizer, as this is not a Mac system.")
+    
     # Load layout configuration
     with open(layout_config, 'r') as config_file:
-        layout_keys = yaml.safe_load(config_file)['regions'].keys()
+        config_file = yaml.safe_load(config_file)
+        layout_keys = config_file['regions'].keys() 
+        header_mappings = config_file.get('header_mappings', {})
 
+    postprocessor = PostProcessor()
     # Prepare CSV file
     csv_file_path = os.path.join(output_dir, 'results.csv')
     os.makedirs(output_dir, exist_ok=True)
@@ -38,6 +43,7 @@ def pipeline(input_dir, output_dir, layout_config):
             detections = detector.detect(image)
             detector.crop_and_save(detections, os.path.join(output_dir, 'images'), filename)
             results = recognizer.recognize(image, filename)
+            results = postprocessor.postprocess(results)
 
             # Write results to CSV
             row = {'source_file': filename}

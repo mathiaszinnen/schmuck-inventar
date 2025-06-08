@@ -2,6 +2,7 @@ regions:
   Gegenstand: [0, 0, 1, 0.1]
   Inv. Nr.: [0.047, 0.077, 0.275, 0.135]
   Herkunft: [0.2737, 0.0806, 0.5054, 0.237]
+  Foto Notes: [0.5054, 0.0806, 1, 0.237]
   Standort: [0.047, 0.135, 0.275, 0.235]
   Material: [0.047, 0.237, 0.275, 0.435]
   Datierung: [0.275, 0.237, 0.505, 0.317]
@@ -26,5 +27,5 @@ regions:
 #   - "Zusatz"
 #   - "zusatz"
 
-# custom_header_mappings:
-#   am: 'erworben am'
+custom_header_mappings:
+  am: 'erworben am'
