@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 from PIL import Image
 import yaml
+import random
 
 if platform.system() == 'Darwin':
     from ocrmac import ocrmac
@@ -83,7 +84,25 @@ class CardRecognizer(ABC):
         return None
         
 
+    def _correct_image_orientation(self, image: Image) -> Image:
+        """Corrects the orientation of the image based on EXIF data."""
+        try:
+            exif_data = image._getexif()
+            if exif_data is not None:
+                orientation = exif_data.get(0x0112)  # EXIF tag for orientation
+                if orientation == 3:
+                    image = image.rotate(180, expand=True)
+                elif orientation == 6:
+                    image = image.rotate(270, expand=True)
+                elif orientation == 8:
+                    image = image.rotate(90, expand=True)
+        except AttributeError:
+            print("Image does not have EXIF data.")
+        return image
+
     def recognize(self, image, filename):
+        self._correct_image_orientation(image)
+
         ocr_results = self._do_ocr(image)
         
         assigned_texts = {"source_file": filename}
@@ -102,7 +121,7 @@ class CardRecognizer(ABC):
         
 
     @abstractmethod
-    def _do_ocr(self, image: Any) -> list[OCRResult]:
+    def _do_ocr(self, image: Image) -> list[OCRResult]:
         """This method should be implemented by subclasses to perform the actual recognition."""
         raise NotImplementedError("Subclasses must implement this method.")
 
@@ -121,7 +140,7 @@ class DummyCardRecognizer(CardRecognizer):
     """Just to be able to develop this on non-Mac systems. Might be extended with a real implementation later."""
     def __init__(self, layout_config):
         import json, os
-        examples_path = os.path.join('resources', 'example_output.json')
+        examples_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'resources','example_output.json')
         with open(examples_path, 'r') as f:
             self.example_output = json.load(f)
         super().__init__(layout_config)
@@ -129,7 +148,7 @@ class DummyCardRecognizer(CardRecognizer):
 
     def _do_ocr(self, image):
         """Dummy implementation that returns a fixed dictionary."""
-        examples = self.example_output[0]
+        examples = random.choice(self.example_output)
         results = []
         for example in examples:
             results.append(OCRResult.from_ocrmac_result(example))

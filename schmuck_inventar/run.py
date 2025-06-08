@@ -5,7 +5,9 @@ from schmuck_inventar.detection import YoloImageDetector
 from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer
 import platform
 import appdirs
-import cv2
+from PIL import Image
+import yaml
+import csv
 from tqdm import tqdm
 
 def pipeline(input_dir, output_dir, layout_config):
@@ -17,16 +19,30 @@ def pipeline(input_dir, output_dir, layout_config):
     else:
         recognizer = DummyCardRecognizer(layout_config=layout_config)
         print("Using dummy recognizer, as this is not a Mac system.")
+    # Load layout configuration
+    with open(layout_config, 'r') as config_file:
+        layout_keys = yaml.safe_load(config_file)['regions'].keys()
 
-    for filename in tqdm(os.listdir(input_dir)):
-        file_path = os.path.join(input_dir, filename)
-        image = cv2.imread(file_path)
-        detections = detector.detect(image)
-        detector.crop_and_save(detections, os.path.join(output_dir,'images'), filename)
-        results = recognizer.recognize(image,filename)
-        print('debug')
-        print(results)
+    # Prepare CSV file
+    csv_file_path = os.path.join(output_dir, 'results.csv')
+    os.makedirs(output_dir, exist_ok=True)
 
+    with open(csv_file_path, mode='w', newline='', encoding='utf-8') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, fieldnames=['source_file'] + list(layout_keys))
+        csv_writer.writeheader()
+
+        # Process each file
+        for filename in tqdm(os.listdir(input_dir)):
+            file_path = os.path.join(input_dir, filename)
+            image = Image.open(file_path)
+            detections = detector.detect(image)
+            detector.crop_and_save(detections, os.path.join(output_dir, 'images'), filename)
+            results = recognizer.recognize(image, filename)
+
+            # Write results to CSV
+            row = {'source_file': filename}
+            row.update({key: results.get(key, '') for key in layout_keys})
+            csv_writer.writerow(row)
 
 def main():
     parser = argparse.ArgumentParser(description="Process input directory for Schmuck Inventar.")
