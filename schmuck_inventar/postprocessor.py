@@ -83,7 +83,7 @@ class SchmuckPostProcessor(PostProcessor):
     def _extract_notes(self, row: dict) -> str | None:
         notes = row.get('Literatur')
         if self._is_bought(row) and row.get('erworben von') != '':
-            notes += f". Angaben aus dem Inventarkartenfeld 'erworben von': {row.get('erworben von')}"
+            notes += f"Angaben aus dem Inventarkartenfeld 'erworben von': {row.get('erworben von')}"
         return notes
 
     def _extract_standort(self, standort: str) -> str: 
