@@ -69,7 +69,7 @@ def main():
     parser.add_argument(
         '--layout_config',
         type=str,
-        default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config', 'regions.yaml'),
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'regions.yaml'),
         required=False,
         help="Path to the layout configuration file (YAML). Defaults to 'config/regions.yaml' relative to the project root."
     )

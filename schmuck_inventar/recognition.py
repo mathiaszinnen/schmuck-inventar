@@ -138,7 +138,7 @@ class DummyCardRecognizer(CardRecognizer):
     """Just to be able to develop this on non-Mac systems. Might be extended with a real implementation later."""
     def __init__(self, layout_config):
         import json, os
-        examples_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'resources','example_output.json')
+        examples_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'resources','example_output.json')
         with open(examples_path, 'r') as f:
             self.example_output = json.load(f)
         super().__init__(layout_config)
