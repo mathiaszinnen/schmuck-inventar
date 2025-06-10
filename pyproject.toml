@@ -1,9 +1,12 @@
 [project]
 name = "schmuck-inventar"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
     { name = "Mathias Zinnen", email = "mathias.zinnen@gmail.com" }
 ]
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
 
 description = "Read inventory cards, extract images, and create structured data."
 readme = "README.MD"
@@ -29,5 +32,5 @@ packages = ["schmuck_inventar"]
 [project.scripts]
 schmuck-inventar = "schmuck_inventar.run:main"
 
-[tool.setuptools.package-data]
-schmuck_inventar = ["config/regions.yaml"]
+[tool.hatch.build.targets.sdist]
+include = ["config/regions.yaml]
