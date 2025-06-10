@@ -4,3 +4,4 @@ output/
 *.egg-info
 *.pyc
 build/
+dist/
