@@ -19,7 +19,8 @@ dependencies = [
     "ultralytics",
     "appdirs",
     "ocrmac; sys.platform == 'darwin'",
-    "tqdm"
+    "tqdm",
+    "Levenshtein"
 ]
 
 [tool.setuptools]

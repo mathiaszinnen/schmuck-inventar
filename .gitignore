@@ -3,4 +3,4 @@
 output/
 *.egg-info
 *.pyc
-.build
+build/

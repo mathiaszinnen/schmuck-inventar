@@ -135,7 +135,6 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['Notizen'] = self._extract_notes(row) or empty_marker
         updated_row['Negativ-Nr.'] = row.get('Foto Notes', empty_marker)
 
-        updated_row = self._extract_erwerb(row)
 
 
         return updated_row

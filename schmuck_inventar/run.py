@@ -35,6 +35,8 @@ def pipeline(input_dir, output_dir, layout_config):
         csv_writer.writeheader()
 
         for filename in tqdm(os.listdir(input_dir)):
+            if not filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')):
+                continue
             file_path = os.path.join(input_dir, filename)
             image = Image.open(file_path)
             detections = detector.detect(image)
