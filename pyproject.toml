@@ -27,3 +27,6 @@ packages = ["schmuck_inventar"]
 
 [project.scripts]
 schmuck-inventar = "schmuck_inventar.run:main"
+
+[tool.setuptools.package-data]
+schmuck_inventar = ["config/regions.yaml"]
