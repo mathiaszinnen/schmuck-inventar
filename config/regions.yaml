@@ -15,12 +15,6 @@ regions:
   Vers.-Wert: [0.870, 0.435, 1.0, 0.521]
   Literatur: [0.275, 0.522, 1.0, 1.0]
 
-# header_filters: 
-#   - "Vers.-Wert:"
-#   - "Vers.-Wert:;"
-#   - "Vers.—Wert:;"
-#   - "Vers.—Wert:"
-
 # file_skip_markers:
 #   - "Verso"
 #   - "verso"
