@@ -82,7 +82,7 @@ class SchmuckPostProcessor(PostProcessor):
 
     def _extract_notes(self, row: dict) -> str | None:
         notes = row.get('Literatur')
-        if self._is_bought(row) and row.get('erworben von') != '':
+        if not self._is_bought(row) and row.get('erworben von') != '':
             notes += f"Angaben aus dem Inventarkartenfeld 'erworben von': {row.get('erworben von')}"
         return notes
 
@@ -127,7 +127,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['Währung'] = currency
         updated_row['Material/Technik'] = row.get('Material',empty_marker)
         updated_row['Maße'] = row.get('Maße', empty_marker)
-        DEFAULT_DESCRIPTION = 'Dieses Objekt befindet sich im Schmuckmuseum Pforzheim. Beschreibung automatisch generiert.'
+        DEFAULT_DESCRIPTION = 'Dieses Objekt befindet sich im Schmuckmuseum Pforzheim (automatisch generierte Beschreibung).'
         updated_row['Beschreibung'] = row.get('Beschreibung', DEFAULT_DESCRIPTION)
         updated_row['Gekauft, wann?'] = row.get('am', empty_marker) 
         updated_row['Versicherungswert'] = row.get('Vers.-Wert', empty_marker)
