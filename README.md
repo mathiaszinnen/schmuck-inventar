@@ -1,6 +1,9 @@
 # schmuck-inventar
 
 ## Installation
+
+Set up your environment using your favourite environment management tool. We recommend [venv](https://docs.python.org/3/library/venv.html). 
+
 Install using `pip install schmuck-inventar`
 
 ## Usage
