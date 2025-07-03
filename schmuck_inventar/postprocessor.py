@@ -110,7 +110,7 @@ class SchmuckPostProcessor(PostProcessor):
         """
         Update a single entry in the row based on rules.
         """
-        unchanged_keys = ['source_file', 'Ausstellungen']
+        unchanged_keys = ['source_file', 'Ausstellungen', 'erworben von', 'Literatur', 'Herkunft']
 
         updated_row = {}
         for k in unchanged_keys:
@@ -134,6 +134,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['source_file'] = row.get('source_file', 'Unbekannt')
         updated_row['Notizen'] = self._extract_notes(row) or empty_marker
         updated_row['Negativ-Nr.'] = row.get('Foto Notes', empty_marker)
+        updated_row['Form entworfen, wann'] = row.get('Datierung', empty_marker)
 
 
 
