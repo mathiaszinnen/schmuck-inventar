@@ -62,15 +62,17 @@ class SchmuckPostProcessor(PostProcessor):
         if not price_str or price_str.strip() == '':
             price = 'Unbekannt'
         if distance(price_str.strip(), 'Stiftung') <= 1:
-            price = 0
-            currency = 'Mark'
-        if 'm' in price_str.lower() or 'dm' in price_str.lower():
-            price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
-            currency = 'Mark'
-        else:
-            price = re.sub(r'[^\d]', '', price_str)  # Default case: remove non-digit characters
-            currency = ''
-        return price, currency
+            return 0, 'Unbekannt'
+
+        price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
+
+        if 'DM' in price_str or 'Dm' in price_str:
+            return price, 'Deutsche Mark'
+        if 'M' in price_str.lower():
+            return price, 'Reichsmark'
+
+        return price, 'Unbekannt'
+            
 
     def _is_bought(self, row: dict) -> bool:
         erworben = row.get('erworben von', '').strip()
