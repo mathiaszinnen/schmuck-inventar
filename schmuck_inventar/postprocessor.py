@@ -64,7 +64,7 @@ class SchmuckPostProcessor(PostProcessor):
         if distance(price_str.strip(), 'Stiftung') <= 1:
             price = 0
             currency = 'Mark'
-        if 'M' in price_str or 'DM' in price_str:
+        if 'm' in price_str.lower() or 'dm' in price_str.lower():
             price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
             currency = 'Mark'
         else:
@@ -106,35 +106,55 @@ class SchmuckPostProcessor(PostProcessor):
 
         
 
-    def _update_one_entry(self, row: dict, empty_marker='') -> dict:
+    def _update_one_entry(self, row: dict, empty_marker='Unklar') -> dict:
         """
         Update a single entry in the row based on rules.
         """
-        unchanged_keys = ['source_file', 'Ausstellungen', 'erworben von', 'Literatur', 'Herkunft']
+        unchanged_keys = ['Herkunft']
 
         updated_row = {}
         for k in unchanged_keys:
             updated_row[k] = row.get(k, empty_marker) 
 
+        updated_row['object_title'] = row.get('Gegenstand', empty_marker)
+        updated_row['object_type'] = "Schmuck"
+        updated_row['inventory_number'] = row.get('Inv. Nr.', empty_marker)
 
-        updated_row['Objektname'] = row.get('Gegenstand', empty_marker)
-        updated_row['Objektart'] = "Schmuck"
-        updated_row['Inventarnummer'] = row.get('Inv. Nr.', empty_marker)
-        updated_row['Eigentlicher Standort'] = self._extract_standort(row.get('Standort', empty_marker))
-        updated_row["aktueller Standort"] = "Schmuckmuseum Pforzheim"
-        price, currency = self._extract_price_and_currency(row.get('Preis', ''))
-        updated_row['Preis des Erwerbs'] = price
-        updated_row['Währung'] = currency
-        updated_row['Material/Technik'] = row.get('Material',empty_marker)
-        updated_row['Maße'] = row.get('Maße', empty_marker)
+        updated_row['remarks_short'] = row.get('source_file', empty_marker)
+        updated_row['remarks_long'] = row.get('Maße', empty_marker)
+        updated_row['literature_title1'] = row.get('Literatur', empty_marker)
+
+        updated_row['abode_regular'] = self._extract_standort(row.get('Standort', empty_marker))
+        updated_row["abode_actual"] = "Schmuckmuseum Pforzheim"
+
+        updated_row['material_separate'] = row.get('Material',empty_marker)
         DEFAULT_DESCRIPTION = 'Dieses Objekt befindet sich im Schmuckmuseum Pforzheim (automatisch generierte Beschreibung).'
-        updated_row['Beschreibung'] = row.get('Beschreibung', DEFAULT_DESCRIPTION)
-        updated_row['Gekauft, wann?'] = row.get('am', empty_marker) 
-        updated_row['Versicherungswert'] = row.get('Vers.-Wert', empty_marker)
-        updated_row['source_file'] = row.get('source_file', 'Unbekannt')
-        updated_row['Notizen'] = self._extract_notes(row) or empty_marker
-        updated_row['Negativ-Nr.'] = row.get('Foto Notes', empty_marker)
-        updated_row['Form entworfen, wann'] = row.get('Datierung', empty_marker)
+        updated_row['object_description'] = row.get('Beschreibung', DEFAULT_DESCRIPTION)
+
+        insurance_value, insurance_value_currency = self._extract_price_and_currency(row.get('Vers.-Wert', ''))
+        updated_row['worth_insurance_value'] = insurance_value
+        updated_row['worth_insurance_unit'] = insurance_value_currency
+
+        # updated_row['Notizen'] = self._extract_notes(row) or empty_marker
+        updated_row['exhibition_name1'] = row.get('Ausstellung', empty_marker)
+
+        updated_row['image_name1'] = row.get('Foto Notes', empty_marker)
+        updated_row['image_owner1'] = 'Schmuckmuseum Pforzheim'
+        updated_row['image_rights1'] = 'RR-R'
+        updated_row['image_visible1'] = 'n'
+        updated_row['image_main1'] = 'n'
+
+
+        updated_row['form_designed_when1'] = row.get('Datierung', empty_marker)
+        updated_row['form_designed_who1'] = 'Unklar'
+
+        updated_row['acquisition_type'] = 'Unbekannt'
+        updated_row['acquisition_name'] = 'Erwerb'
+        updated_row['acquisition_source_name'] = row.get('erworben von', empty_marker)
+        updated_row['acquisition_date'] = row.get('am', empty_marker) 
+        acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
+        updated_row['acquisition_price'] = acquisition_price
+        updated_row['acqusition_price_unit'] = acquisition_price_currency
 
 
 
