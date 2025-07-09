@@ -15,7 +15,7 @@ class PostProcessor:
         Write the processed data to a CSV file.
         """
         with open(self.output_csv, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=data[0].keys(),separator=';')
+            writer = csv.DictWriter(file, fieldnames=data[0].keys(),delimiter=';')
             writer.writeheader()
             writer.writerows(data)
             print(f"Processed data written to {self.output_csv}")
