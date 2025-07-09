@@ -106,11 +106,11 @@ class SchmuckPostProcessor(PostProcessor):
 
         
 
-    def _update_one_entry(self, row: dict, empty_marker='Unklar') -> dict:
+    def _update_one_entry(self, row: dict, empty_marker='Unbekannt') -> dict:
         """
         Update a single entry in the row based on rules.
         """
-        unchanged_keys = ['Herkunft']
+        unchanged_keys = []
 
         updated_row = {}
         for k in unchanged_keys:
@@ -146,9 +146,10 @@ class SchmuckPostProcessor(PostProcessor):
 
 
         updated_row['form_designed_when1'] = row.get('Datierung', empty_marker)
-        updated_row['form_designed_who1'] = 'Unklar'
+        updated_row['form_designed_who1'] = empty_marker
+        updated_row['form_designed_where1'] = row.get('Herkunft', empty_marker)
 
-        updated_row['acquisition_type'] = 'Unbekannt'
+        updated_row['acquisition_type'] = empty_marker
         updated_row['acquisition_name'] = 'Erwerb'
         updated_row['acquisition_source_name'] = row.get('erworben von', empty_marker)
         updated_row['acquisition_date'] = row.get('am', empty_marker) 
