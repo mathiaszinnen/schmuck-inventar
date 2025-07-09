@@ -60,7 +60,7 @@ class SchmuckPostProcessor(PostProcessor):
 
 
     def _extract_price_and_currency(self, price_str: str) -> tuple:
-        def is_present(price_str):
+        def is_donated(price_str):
             if distance(price_str.strip(), 'Stiftung') <= 1:
                 return True
             if distance(price_str.strip(), 'Geschenk') <= 1:
@@ -70,8 +70,8 @@ class SchmuckPostProcessor(PostProcessor):
         if not price_str or price_str.strip() == '':
             price = 'Unbekannt'
 
-        if is_present(price_str):
-            return 0, 'Unbekannt'
+        if is_donated(price_str):
+            return 0, 'Deutsche Mark'
 
         price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
 
@@ -80,7 +80,7 @@ class SchmuckPostProcessor(PostProcessor):
         if 'M' in price_str:
             return price, 'Reichsmark'
 
-        return price, 'Unbekannt'
+        return price, 'Deutsche Mark'
             
 
     def _is_bought(self, row: dict) -> bool:
