@@ -149,7 +149,7 @@ class SchmuckPostProcessor(PostProcessor):
         # updated_row['Notizen'] = self._extract_notes(row) or empty_marker
         updated_row['exhibition_name1'] = row.get('Ausstellung', empty_marker)
 
-        updated_row['image_name1'] = row.get('Foto Notes', empty_marker)
+        updated_row['image_name1'] = row.get('Foto Notes', 'Foto Nr.:')
         updated_row['image_owner1'] = 'Schmuckmuseum Pforzheim'
         updated_row['image_rights1'] = 'RR-R'
         updated_row['image_visible1'] = 'n'
@@ -166,7 +166,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['acquisition_date'] = row.get('am', empty_marker) 
         acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
         updated_row['acquisition_price'] = acquisition_price
-        updated_row['acqusition_price_unit'] = acquisition_price_currency
+        updated_row['acqusition_price_currency'] = acquisition_price_currency
 
 
 
