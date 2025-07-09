@@ -1,7 +1,6 @@
 .vscode
 .venv
 output/
-resources/
 *.egg-info
 *.pyc
 build/
