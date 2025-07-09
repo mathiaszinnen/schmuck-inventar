@@ -1,6 +1,6 @@
 [project]
 name = "schmuck-inventar"
-version = "0.0.14"
+version = "0.0.15"
 authors = [
     { name = "Mathias Zinnen", email = "mathias.zinnen@gmail.com" }
 ]
