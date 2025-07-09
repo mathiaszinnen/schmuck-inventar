@@ -15,7 +15,7 @@ class PostProcessor:
         Write the processed data to a CSV file.
         """
         with open(self.output_csv, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=data[0].keys())
+            writer = csv.DictWriter(file, fieldnames=data[0].keys(),separator=';')
             writer.writeheader()
             writer.writerows(data)
             print(f"Processed data written to {self.output_csv}")
@@ -115,6 +115,12 @@ class SchmuckPostProcessor(PostProcessor):
             row = row
         return row
 
+    def _extract_description(self, row: dict) -> str:
+        DEFAULT_DESCRIPTION = 'Dieses Schmuckstück ist aus dem historischen Schmuckinventar der Kunstgewerbeschule Pforzheim.'
+        beschreibung = row.get('Beschreibung', DEFAULT_DESCRIPTION)
+        if not beschreibung or beschreibung.strip() == '':
+            beschreibung = DEFAULT_DESCRIPTION
+        return beschreibung
         
 
     def _update_one_entry(self, row: dict, empty_marker='Unbekannt') -> dict:
@@ -139,8 +145,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row["abode_actual"] = "Schmuckmuseum Pforzheim"
 
         updated_row['material_separate'] = row.get('Material',empty_marker)
-        DEFAULT_DESCRIPTION = 'Dieses Objekt befindet sich im Schmuckmuseum Pforzheim (automatisch generierte Beschreibung).'
-        updated_row['object_description'] = row.get('Beschreibung', DEFAULT_DESCRIPTION)
+        updated_row['object_description'] = self._extract_description(row)
 
         insurance_value, insurance_value_currency = self._extract_price_and_currency(row.get('Vers.-Wert', ''))
         updated_row['worth_insurance_value'] = insurance_value
