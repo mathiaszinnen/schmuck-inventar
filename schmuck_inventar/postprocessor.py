@@ -58,17 +58,26 @@ class SchmuckPostProcessor(PostProcessor):
         # spacy.cli.download("de_core_news_sm")
         # self.nlp = spacy.load("de_core_news_sm")
 
+
     def _extract_price_and_currency(self, price_str: str) -> tuple:
+        def is_present(price_str):
+            if distance(price_str.strip(), 'Stiftung') <= 1:
+                return True
+            if distance(price_str.strip(), 'Geschenk') <= 1:
+                return True
+            return False
+
         if not price_str or price_str.strip() == '':
             price = 'Unbekannt'
-        if distance(price_str.strip(), 'Stiftung') <= 1:
+
+        if is_present(price_str):
             return 0, 'Unbekannt'
 
         price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
 
         if 'DM' in price_str or 'Dm' in price_str:
             return price, 'Deutsche Mark'
-        if 'M' in price_str.lower():
+        if 'M' in price_str:
             return price, 'Reichsmark'
 
         return price, 'Unbekannt'
