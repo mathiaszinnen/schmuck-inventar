@@ -141,7 +141,7 @@ class SchmuckPostProcessor(PostProcessor):
 
         updated_row['object_title'] = get_or_default(row, 'Titel')
         updated_row['object_type'] = "Schmuck"
-        updated_row['inventory_number'] = self.get_or_default(row, 'Inv. Nr.')
+        updated_row['inventory_number'] = get_or_default(row, 'Inv. Nr.')
 
         updated_row['remarks_short'] = get_or_default(row, 'source_file')
         updated_row['remarks_long'] = get_or_default(row, 'Maße')
