@@ -139,7 +139,7 @@ class SchmuckPostProcessor(PostProcessor):
         for k in unchanged_keys:
             updated_row[k] = get_or_default(row, k)
 
-        updated_row['object_title'] = get_or_default(row, 'Titel')
+        updated_row['object_title'] = get_or_default(row, 'Gegenstand')
         updated_row['object_type'] = "Schmuck"
         updated_row['inventory_number'] = get_or_default(row, 'Inv. Nr.')
 
