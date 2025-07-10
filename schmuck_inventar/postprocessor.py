@@ -172,6 +172,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['form_designed_who1'] = self._empty_marker
         updated_row['form_designed_where1'] = get_or_default(row, 'Herkunft')
 
+        # internal fields
         updated_row['acquisition_type'] = self._empty_marker
         updated_row['acquisition_name'] = 'Erwerb'
         updated_row['acquisition_source_name'] = get_or_default(row, 'erworben von')
@@ -179,6 +180,12 @@ class SchmuckPostProcessor(PostProcessor):
         acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
         updated_row['acquisition_price'] = acquisition_price
         updated_row['acquisition_price_currency'] = acquisition_price_currency
-
+        updated_row['acquisition_note'] = "Art des Zugangs ist zu überprüfen."
+        
+        # copied from acquisition for potential publication
+        updated_row['received_ownership_when1'] = updated_row['acquisition_date']
+        updated_row['received_ownership_name'] = updated_row['acquisition_source_name'] 
+        updated_row['received_ownership_where1'] = 'Pforzheim'
+        updated_row['received_ownership_where_sure1'] = 'n'
 
         return updated_row
