@@ -55,6 +55,7 @@ class PostProcessor:
 class SchmuckPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
         super().__init__(input_csv, output_csv)
+        self._empty_marker = 'Unbekannt'
         # spacy.cli.download("de_core_news_sm")
         # self.nlp = spacy.load("de_core_news_sm")
 
@@ -99,7 +100,7 @@ class SchmuckPostProcessor(PostProcessor):
 
     def _extract_standort(self, standort: str) -> str: 
         if not standort or standort.strip() == '':
-            return 'Unbekannt' 
+            return self._empty_marker
         return "alter Standort: " + standort 
     
 
@@ -121,30 +122,36 @@ class SchmuckPostProcessor(PostProcessor):
         if not beschreibung or beschreibung.strip() == '':
             beschreibung = DEFAULT_DESCRIPTION
         return beschreibung
-        
+    
 
-    def _update_one_entry(self, row: dict, empty_marker='Unbekannt') -> dict:
+    def _update_one_entry(self, row: dict) -> dict:
         """
         Update a single entry in the row based on rules.
         """
         unchanged_keys = []
+        def get_or_default(row: dict, key: str) -> str:
+            value = row.get(key, '')
+            if value is None or value.strip() == '':
+                return self._empty_marker
+            return value
 
         updated_row = {}
         for k in unchanged_keys:
-            updated_row[k] = row.get(k, empty_marker) 
+            updated_row[k] = self._get_or_default(row, k)
 
-        updated_row['object_title'] = row.get('Gegenstand', empty_marker)
+        updated_row['object_title'] = get_or_default(row, 'Titel')
         updated_row['object_type'] = "Schmuck"
-        updated_row['inventory_number'] = row.get('Inv. Nr.', empty_marker)
+        updated_row['inventory_number'] = self.get_or_default(row, 'Inv. Nr.')
 
-        updated_row['remarks_short'] = row.get('source_file', empty_marker)
-        updated_row['remarks_long'] = row.get('Maße', empty_marker)
-        updated_row['literature_title1'] = row.get('Literatur', empty_marker)
+        updated_row['remarks_short'] = get_or_default(row, 'source_file')
+        updated_row['remarks_long'] = get_or_default(row, 'Maße')
+        updated_row['literature_title1'] = get_or_default(row, 'Literatur')
 
-        updated_row['abode_regular'] = self._extract_standort(row.get('Standort', empty_marker))
+
+        updated_row['abode_regular'] = self._extract_standort(row.get('Standort'))
         updated_row["abode_actual"] = "Schmuckmuseum Pforzheim"
 
-        updated_row['material_separate'] = row.get('Material',empty_marker)
+        updated_row['material_separate'] = get_or_default(row, 'Material')
         updated_row['object_description'] = self._extract_description(row)
 
         insurance_value, insurance_value_currency = self._extract_price_and_currency(row.get('Vers.-Wert', ''))
@@ -152,27 +159,26 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['worth_insurance_unit'] = insurance_value_currency
 
         # updated_row['Notizen'] = self._extract_notes(row) or empty_marker
-        updated_row['exhibition_name1'] = row.get('Ausstellung', empty_marker)
+        updated_row['exhibition_name1'] = get_or_default(row, 'Ausstellung')
 
-        updated_row['image_name1'] = row.get('Foto Notes', 'Foto Nr.:')
+        updated_row['image_name1'] = get_or_default('Foto Notes')
         updated_row['image_owner1'] = 'Schmuckmuseum Pforzheim'
         updated_row['image_rights1'] = 'RR-R'
         updated_row['image_visible1'] = 'n'
         updated_row['image_main1'] = 'n'
 
 
-        updated_row['form_designed_when1'] = row.get('Datierung', empty_marker)
-        updated_row['form_designed_who1'] = empty_marker
-        updated_row['form_designed_where1'] = row.get('Herkunft', empty_marker)
+        updated_row['form_designed_when1'] = get_or_default(updated_row, 'Datierung')
+        updated_row['form_designed_who1'] = self._empty_marker
+        updated_row['form_designed_where1'] = get_or_default(row, 'Herkunft')
 
-        updated_row['acquisition_type'] = empty_marker
+        updated_row['acquisition_type'] = self._empty_marker
         updated_row['acquisition_name'] = 'Erwerb'
-        updated_row['acquisition_source_name'] = row.get('erworben von', empty_marker)
-        updated_row['acquisition_date'] = row.get('am', empty_marker) 
+        updated_row['acquisition_source_name'] = get_or_default(updated_row, 'erworben von')
+        updated_row['acquisition_date'] = get_or_default(updated_row, 'am')
         acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
         updated_row['acquisition_price'] = acquisition_price
-        updated_row['acqusition_price_currency'] = acquisition_price_currency
-
+        updated_row['acquisition_price_currency'] = acquisition_price_currency
 
 
         return updated_row
