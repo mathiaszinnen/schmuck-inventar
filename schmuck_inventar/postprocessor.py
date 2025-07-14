@@ -159,13 +159,13 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['worth_insurance_unit'] = insurance_value_currency
 
         # updated_row['Notizen'] = self._extract_notes(row) or empty_marker
-        updated_row['exhibition_name1'] = get_or_default(row, 'Ausstellung')
+        updated_row['exhibition_name1'] = get_or_default(row, 'Ausstellungen')
 
         updated_row['image_name1'] = get_or_default(row,'Foto Notes')
         updated_row['image_owner1'] = 'Schmuckmuseum Pforzheim'
         updated_row['image_rights1'] = 'RR-R'
-        updated_row['image_visible1'] = 'n'
-        updated_row['image_main1'] = 'n'
+        updated_row['image_visible1'] = 'y'
+        updated_row['image_main1'] = 'y'
 
 
         updated_row['form_designed_when1'] = get_or_default(row, 'Datierung')
@@ -184,7 +184,7 @@ class SchmuckPostProcessor(PostProcessor):
         
         # copied from acquisition for potential publication
         updated_row['received_ownership_when1'] = updated_row['acquisition_date']
-        updated_row['received_ownership_name'] = updated_row['acquisition_source_name'] 
+        updated_row['received_ownership_who1'] = updated_row['acquisition_source_name'] 
         updated_row['received_ownership_where1'] = 'Pforzheim'
         updated_row['received_ownership_where_sure1'] = 'n'
 
