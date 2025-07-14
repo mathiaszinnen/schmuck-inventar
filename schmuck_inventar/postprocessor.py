@@ -70,16 +70,16 @@ class SchmuckPostProcessor(PostProcessor):
 
         if not price_str or price_str.strip() == '':
             price = 'Unbekannt'
+        else:
+            price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
 
         if is_donated(price_str):
             return 0, 'Deutsche Mark'
 
-        price = re.sub(r'[^\d]', '', price_str)  # Remove non-digit characters
-
         if 'DM' in price_str or 'Dm' in price_str:
             return price, 'Deutsche Mark'
         if 'M' in price_str:
-            return price, 'Reichsmark'
+            return price, 'Reichsmark (Deutsches Reich)'
 
         return price, 'Deutsche Mark'
             
@@ -129,10 +129,10 @@ class SchmuckPostProcessor(PostProcessor):
         Update a single entry in the row based on rules.
         """
         unchanged_keys = []
-        def get_or_default(row: dict, key: str) -> str:
+        def get_or_default(row: dict, key: str, default=self._empty_marker) -> str:
             value = row.get(key, '')
             if value is None or value.strip() == '':
-                return self._empty_marker
+                return default
             return value
 
         updated_row = {}
@@ -176,7 +176,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['acquisition_type'] = self._empty_marker
         updated_row['acquisition_name'] = 'Erwerb'
         updated_row['acquisition_source_name'] = get_or_default(row, 'erworben von')
-        updated_row['acquisition_date'] = get_or_default(row, 'am')
+        updated_row['acquisition_date'] = get_or_default(row, 'am', default='3000')
         acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
         updated_row['acquisition_price'] = acquisition_price
         updated_row['acquisition_price_currency'] = acquisition_price_currency
