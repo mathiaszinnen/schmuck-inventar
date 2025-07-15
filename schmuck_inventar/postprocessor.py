@@ -176,7 +176,7 @@ class SchmuckPostProcessor(PostProcessor):
         updated_row['acquisition_type'] = self._empty_marker
         updated_row['acquisition_name'] = 'Erwerb'
         updated_row['acquisition_source_name'] = get_or_default(row, 'erworben von')
-        updated_row['acquisition_date'] = get_or_default(row, 'am', default='3000')
+        updated_row['acquisition_date'] = get_or_default(row, 'am', default='3000-01-01')
         acquisition_price, acquisition_price_currency = self._extract_price_and_currency(row.get('Preis', ''))
         updated_row['acquisition_price'] = acquisition_price
         updated_row['acquisition_price_currency'] = acquisition_price_currency
