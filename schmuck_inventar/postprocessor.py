@@ -63,6 +63,15 @@ class BenchmarkingPostProcessor(PostProcessor):
         Update a single entry in the row based on benchmarking rules.
         """
         row['filename'] = row.get('source_file', self._empty_marker)
+        del row['source_file']
+        row['Inventarnummer'] = row.get('Inv. Nr.', self._empty_marker)
+        del row['Inv. Nr.']
+        row['erworben am'] = row.get('am', self._empty_marker)
+        del row['am']
+        row['Versicherungswert'] = row.get('Vers.-Wert', self._empty_marker)
+        del row['Vers.-Wert']
+        row['Masse'] = row.get('Maße', self._empty_marker)
+        del row['Maße']
         return row
 
 class SchmuckPostProcessor(PostProcessor):
