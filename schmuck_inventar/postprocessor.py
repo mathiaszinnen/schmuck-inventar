@@ -96,7 +96,9 @@ class BenchmarkingPostProcessor(PostProcessor):
         del row['am']
         row['Versicherungswert'] = row.get('Vers.-Wert', self._empty_marker)
         del row['Vers.-Wert']
-        row['Masse'] = self._handle_masse(row)
+        measurements, weight = self._handle_masse(row)
+        row['Masse'] = measurements
+        row['Gewicht'] = weight
         del row['Maße']
         return row
 
