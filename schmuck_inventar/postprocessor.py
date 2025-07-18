@@ -88,19 +88,26 @@ class BenchmarkingPostProcessor(PostProcessor):
         """
         Update a single entry in the row based on benchmarking rules.
         """
-        row['filename'] = row.get('source_file', self._empty_marker)
-        del row['source_file']
-        row['Inventarnummer'] = row.get('Inv. Nr.', self._empty_marker)
-        del row['Inv. Nr.']
-        row['erworben am'] = row.get('am', self._empty_marker)
-        del row['am']
-        row['Versicherungswert'] = row.get('Vers.-Wert', self._empty_marker)
-        del row['Vers.-Wert']
+        updated_row = {}
+        for k, v in row.items():
+            if v is None or v.strip() == '':
+                updated_row[k] = self._empty_marker
+            else:
+                updated_row[k] = v.strip()
+
+        updated_row['filename'] = row.get('source_file', self._empty_marker)
+        del updated_row['source_file']
+        updated_row['Inventarnummer'] = row.get('Inv. Nr.', self._empty_marker)
+        del updated_row['Inv. Nr.']
+        updated_row['erworben am'] = row.get('am', self._empty_marker)
+        del updated_row['am']
+        updated_row['Versicherungswert'] = row.get('Vers.-Wert', self._empty_marker)
+        del updated_row['Vers.-Wert']
         measurements, weight = self._handle_masse(row)
-        row['Masse'] = measurements
-        row['Gewicht'] = weight
-        del row['Maße']
-        return row
+        updated_row['Masse'] = measurements
+        updated_row['Gewicht'] = weight
+        del updated_row['Maße']
+        return updated_row
 
 class SchmuckPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
