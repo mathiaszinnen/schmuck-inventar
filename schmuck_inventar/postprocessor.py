@@ -9,13 +9,14 @@ class PostProcessor:
             reader = csv.DictReader(file)
             self.input_data = [row for row in reader]
         self.output_csv = output_csv
+        self.delimiter = ','  
 
     def _write_to_csv(self, data):
         """
         Write the processed data to a CSV file.
         """
         with open(self.output_csv, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=data[0].keys(),delimiter=';')
+            writer = csv.DictWriter(file, fieldnames=data[0].keys(),delimiter=self.delimiter)
             writer.writeheader()
             writer.writerows(data)
             print(f"Processed data written to {self.output_csv}")
@@ -68,6 +69,7 @@ class SchmuckPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
         super().__init__(input_csv, output_csv)
         self._empty_marker = 'Unbekannt'
+        self.delimiter = ';'  # Use semicolon as delimiter for Schmuck CSV
         # spacy.cli.download("de_core_news_sm")
         # self.nlp = spacy.load("de_core_news_sm")
 
