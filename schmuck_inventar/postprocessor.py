@@ -57,6 +57,7 @@ class BenchmarkingPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
         super().__init__(input_csv, output_csv)
         self._empty_marker = ''
+        print('Benchmarking postprocessor initialized.')
 
     def _handle_masse(self, row: dict) -> str:
         masse_str = row.get('Maße', '')    

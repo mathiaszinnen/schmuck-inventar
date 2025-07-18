@@ -56,8 +56,9 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
             csv_writer.writerow(row)
         print(f"Raw extraction results written to {results_csv_raw}")
     
-    postprocessor = postprocessor_class(results_csv_raw, os.path.join(output_dir, 'results.csv'))
     final_csv_output = os.path.join(output_dir, 'results.csv')
+    postprocessor = postprocessor_class(results_csv_raw, final_csv_output)
+    postprocessor.postprocess()
 
 def main():
     parser = argparse.ArgumentParser(description="Process input directory for Schmuck Inventar.")
