@@ -24,10 +24,10 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
     if eval_mode:
         print("Running in evaluation mode, using dummy recognizer.")
         recognizer = DummyCardRecognizer(layout_config=layout_config)
-        postprocessor = BenchmarkingPostProcessor(results_csv_raw, final_csv_output)
+        postprocessor_class = BenchmarkingPostProcessor
     else:
         detector = YoloImageDetector(resources_path=os.path.join(app_dir,"detection"))
-        postprocessor = SchmuckPostProcessor(results_csv_raw, final_csv_output)
+        postprocessor_class = SchmuckPostProcessor
     
     # Load layout configuration
     with open(layout_config, 'r') as config_file:
@@ -56,6 +56,7 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
             csv_writer.writerow(row)
         print(f"Raw extraction results written to {results_csv_raw}")
     
+    postprocessor = postprocessor_class(results_csv_raw, os.path.join(output_dir, 'results.csv'))
     final_csv_output = os.path.join(output_dir, 'results.csv')
 
 def main():
