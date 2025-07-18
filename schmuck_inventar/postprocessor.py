@@ -58,6 +58,32 @@ class BenchmarkingPostProcessor(PostProcessor):
         super().__init__(input_csv, output_csv)
         self._empty_marker = ''
 
+    def _handle_masse(self, row: dict) -> str:
+        masse_str = row.get('Maße', '')    
+        # Extract all cohesive numbers before 'g' as weight, others as measurement
+        weights = []
+        measurements = []
+
+        # Remove exact match of "Gewicht:" from the input string
+        masse_str = re.sub(r'\bGewicht:\b', '', masse_str)
+
+        # Find all numbers followed by optional whitespace and 'g' (weight)
+        weight_matches = re.findall(r'(\d+(?:[.,]\d+)?\s*g)', masse_str)
+        weights.extend(weight_matches)
+
+        # Remove weights from the string to avoid double counting
+        masse_str_no_weights = re.sub(r'\d+(?:[.,]\d+)?\s*g', '', masse_str)
+
+        # Find all other numbers (measurements)
+        measurement_matches = re.findall(r'(\d+(?:[.,]\d+)?)', masse_str_no_weights)
+        measurements.extend(measurement_matches)
+
+
+        # Return measurements and weight as a tuple of concatenated strings
+        measurements_str = ', '.join(measurements) if measurements else self._empty_marker
+        weight_str = ', '.join(weights) if weights else self._empty_marker
+        return measurements_str, weight_str
+
     def _update_one_entry(self, row: dict) -> dict:
         """
         Update a single entry in the row based on benchmarking rules.
@@ -70,7 +96,7 @@ class BenchmarkingPostProcessor(PostProcessor):
         del row['am']
         row['Versicherungswert'] = row.get('Vers.-Wert', self._empty_marker)
         del row['Vers.-Wert']
-        row['Masse'] = row.get('Maße', self._empty_marker)
+        row['Masse'] = self._handle_masse(row)
         del row['Maße']
         return row
 
