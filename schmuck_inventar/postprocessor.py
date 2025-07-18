@@ -62,6 +62,7 @@ class BenchmarkingPostProcessor(PostProcessor):
         Update a single entry in the row based on benchmarking rules.
         """
         row['filename'] = row.get('source_file', self._empty_marker)
+        return row
 
 class SchmuckPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
