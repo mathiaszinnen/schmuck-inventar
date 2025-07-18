@@ -75,7 +75,7 @@ class BenchmarkingPostProcessor(PostProcessor):
         # Return measurements and weight as a tuple of concatenated strings
         weight_str = ', '.join(weights) if weights else self._empty_marker
 
-        self._remove_one_header(masse_str_no_weights, 'Gewicht')
+        masse_str_no_weights = self._remove_one_header(masse_str_no_weights, 'Gewicht')
 
         return masse_str_no_weights, weight_str
 
