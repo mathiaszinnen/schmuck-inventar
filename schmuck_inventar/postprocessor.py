@@ -21,17 +21,17 @@ class PostProcessor:
             writer.writerows(data)
             print(f"Processed data written to {self.output_csv}")
         
+    def _remove_one_header(self, field_value: str, header: str) -> str:
+        match = re.search(fr'{header}\s*:', field_value, re.IGNORECASE)
+        if match:
+            field_value = field_value[match.end():].strip()
+            field_value = field_value.split(header)[-1].strip()
+        return field_value
+        
     def _remove_title_parts(self, row: dict) -> dict:
-        def _remove_one_header(v: str, k: str) -> str:
-            match = re.search(fr'{k}\s*:', v, re.IGNORECASE)
-            if match:
-                v = v[match.end():].strip()
-                v = v.split(k)[-1].strip()
-            return v
-
         updated_inventory_data = {}
         for k,v in row.items():
-            updated_inventory_data[k] = _remove_one_header(v,k)
+            updated_inventory_data[k] = self._remove_one_header(v,k)
         return updated_inventory_data
 
     def _update_one_entry(self, row: dict) -> dict:
@@ -65,9 +65,6 @@ class BenchmarkingPostProcessor(PostProcessor):
         weights = []
         measurements = []
 
-        # Remove exact match of "Gewicht:" from the input string
-        masse_str = re.sub(r'\bGewicht:\b', '', masse_str)
-
         # Find all numbers followed by optional whitespace and 'g' (weight)
         weight_matches = re.findall(r'(\d+(?:[.,]\d+)?\s*g)', masse_str)
         weights.extend(weight_matches)
@@ -77,6 +74,9 @@ class BenchmarkingPostProcessor(PostProcessor):
 
         # Return measurements and weight as a tuple of concatenated strings
         weight_str = ', '.join(weights) if weights else self._empty_marker
+
+        self._remove_one_header(masse_str_no_weights, 'Gewicht:')
+
         return masse_str_no_weights, weight_str
 
     def _update_one_entry(self, row: dict) -> dict:
