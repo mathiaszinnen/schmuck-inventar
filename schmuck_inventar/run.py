@@ -3,7 +3,7 @@ import os
 import sys
 from schmuck_inventar.detection import YoloImageDetector
 from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer
-from schmuck_inventar.postprocessor import SchmuckPostProcessor
+from schmuck_inventar.postprocessor import SchmuckPostProcessor, BenchmarkingPostProcessor
 import platform
 import appdirs
 from PIL import Image
@@ -11,7 +11,7 @@ import yaml
 import csv
 from tqdm import tqdm
 
-def pipeline(input_dir, output_dir, layout_config):
+def pipeline(input_dir, output_dir, layout_config, eval_mode):
     print(f"Processing files in directory: {input_dir}")
 
     app_dir = appdirs.user_data_dir("schmuck_inventar")
@@ -50,7 +50,11 @@ def pipeline(input_dir, output_dir, layout_config):
         print(f"Raw extraction results written to {results_csv_raw}")
     
     final_csv_output = os.path.join(output_dir, 'results.csv')
-    postprocessor = SchmuckPostProcessor(results_csv_raw, final_csv_output)
+    if eval_mode:
+        print("Running in evaluation mode.")
+        postprocessor = BenchmarkingPostProcessor(results_csv_raw, final_csv_output)
+    else:
+        postprocessor = SchmuckPostProcessor(results_csv_raw, final_csv_output)
     postprocessor.postprocess()
 
 def main():
@@ -73,12 +77,17 @@ def main():
         required=False,
         help="Path to the layout configuration file (YAML). Defaults to 'config/regions.yaml' relative to the project root."
     )
+    parser.add_argument(
+        '--eval',
+        action='store_true',
+        help="If set, runs the pipeline in evaluation mode."
+    )
     args = parser.parse_args()
 
     input_dir = args.input_dir
     output_dir = args.output_dir
 
-    pipeline(input_dir, output_dir, args.layout_config)
+    pipeline(input_dir, output_dir, args.layout_config, args.eval)
 
     # Check if the input directory exists
     if not os.path.isdir(input_dir):

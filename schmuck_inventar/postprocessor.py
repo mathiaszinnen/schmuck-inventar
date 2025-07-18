@@ -52,6 +52,17 @@ class PostProcessor:
         
         self._write_to_csv(updated_data) 
 
+class BenchmarkingPostProcessor(PostProcessor):
+    def __init__(self, input_csv, output_csv):
+        super().__init__(input_csv, output_csv)
+        self._empty_marker = ''
+
+    def _update_one_entry(self, row: dict) -> dict:
+        """
+        Update a single entry in the row based on benchmarking rules.
+        """
+        row['filename'] = row.get('source_file', self._empty_marker)
+
 class SchmuckPostProcessor(PostProcessor):
     def __init__(self, input_csv, output_csv):
         super().__init__(input_csv, output_csv)
