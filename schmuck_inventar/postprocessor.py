@@ -75,15 +75,9 @@ class BenchmarkingPostProcessor(PostProcessor):
         # Remove weights from the string to avoid double counting
         masse_str_no_weights = re.sub(r'\d+(?:[.,]\d+)?\s*g', '', masse_str)
 
-        # Find all other numbers (measurements)
-        measurement_matches = re.findall(r'(\d+(?:[.,]\d+)?)', masse_str_no_weights)
-        measurements.extend(measurement_matches)
-
-
         # Return measurements and weight as a tuple of concatenated strings
-        measurements_str = ', '.join(measurements) if measurements else self._empty_marker
         weight_str = ', '.join(weights) if weights else self._empty_marker
-        return measurements_str, weight_str
+        return masse_str_no_weights, weight_str
 
     def _update_one_entry(self, row: dict) -> dict:
         """
