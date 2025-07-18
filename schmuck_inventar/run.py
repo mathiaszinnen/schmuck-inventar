@@ -15,12 +15,19 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
     print(f"Processing files in directory: {input_dir}")
 
     app_dir = appdirs.user_data_dir("schmuck_inventar")
-    detector = YoloImageDetector(resources_path=os.path.join(app_dir,"detection"))
     if platform.system() == 'Darwin':
         recognizer = MacOSCardRecognizer(layout_config=layout_config)
     else:
         recognizer = DummyCardRecognizer(layout_config=layout_config)
         print("Using dummy recognizer, as this is not a Mac system.")
+    
+    if eval_mode:
+        print("Running in evaluation mode, using dummy recognizer.")
+        recognizer = DummyCardRecognizer(layout_config=layout_config)
+        postprocessor = BenchmarkingPostProcessor(results_csv_raw, final_csv_output)
+    else:
+        detector = YoloImageDetector(resources_path=os.path.join(app_dir,"detection"))
+        postprocessor = SchmuckPostProcessor(results_csv_raw, final_csv_output)
     
     # Load layout configuration
     with open(layout_config, 'r') as config_file:
@@ -50,12 +57,6 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
         print(f"Raw extraction results written to {results_csv_raw}")
     
     final_csv_output = os.path.join(output_dir, 'results.csv')
-    if eval_mode:
-        print("Running in evaluation mode.")
-        postprocessor = BenchmarkingPostProcessor(results_csv_raw, final_csv_output)
-    else:
-        postprocessor = SchmuckPostProcessor(results_csv_raw, final_csv_output)
-    postprocessor.postprocess()
 
 def main():
     parser = argparse.ArgumentParser(description="Process input directory for Schmuck Inventar.")

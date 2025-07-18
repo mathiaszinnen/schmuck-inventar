@@ -62,3 +62,18 @@ class YoloImageDetector:
             x1,y1,x2,y2 = sorted(result.boxes, key=lambda box: box.conf, reverse=True)[0].xyxy[0].flatten().int().tolist()
             crop = result.orig_img[y1:y2,x1:x2]
             cv2.imwrite(os.path.join(out_dir, name),crop)
+
+
+class DummyDetector:
+    def __init__(self, resources_path, chunk_size=50):
+        self.chunk_size = chunk_size
+        print(f'Dummy detector doing nothing, OCR only.')
+
+    def parse_directory(self, input_dir, crop_dir='tmp', output_base_dir='output'):
+        pass
+
+    def detect(self, image):
+        return []
+
+    def crop_and_save(self, detections, out_dir, name):
+        pass
