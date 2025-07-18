@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from schmuck_inventar.detection import YoloImageDetector
+from schmuck_inventar.detection import YoloImageDetector, DummyDetector
 from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer
 from schmuck_inventar.postprocessor import SchmuckPostProcessor, BenchmarkingPostProcessor
 import platform
@@ -23,7 +23,7 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode):
     
     if eval_mode:
         print("Running in evaluation mode, using dummy recognizer.")
-        recognizer = DummyCardRecognizer(layout_config=layout_config)
+        detector = DummyDetector()
         postprocessor_class = BenchmarkingPostProcessor
     else:
         detector = YoloImageDetector(resources_path=os.path.join(app_dir,"detection"))

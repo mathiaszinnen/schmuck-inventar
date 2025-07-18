@@ -65,7 +65,7 @@ class YoloImageDetector:
 
 
 class DummyDetector:
-    def __init__(self, resources_path, chunk_size=50):
+    def __init__(self, chunk_size=50):
         self.chunk_size = chunk_size
         print(f'Dummy detector doing nothing, OCR only.')
 
