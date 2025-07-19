@@ -152,3 +152,19 @@ class DummyCardRecognizer(CardRecognizer):
             results.append(OCRResult.from_ocrmac_result(example))
         return results
 
+class PeroCardRecognizer(CardRecognizer):
+    """Recognition using pero ocr (https://github.com/DCGM/pero-ocr)."""
+    def __init__(self, layout_config):
+        try:
+            import pero_ocr
+        except ImportError as e:
+            raise ImportError(
+                "The 'pero_ocr' package is required for PeroCardRecognizer. "
+                "Please install it using 'pip install schmuck-inventar[pero]'"
+            ) from e
+        super().__init__(layout_config)
+
+    def _do_ocr(self, image):
+        # Placeholder for Pero card recognition logic
+        # This should be replaced with actual OCR logic for Pero cards
+        return [OCRResult(text="Pero Card Example", confidence=0.9, x1=10, y1=10, x2=100, y2=100)]
