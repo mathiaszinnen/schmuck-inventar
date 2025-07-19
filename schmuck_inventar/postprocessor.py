@@ -14,7 +14,7 @@ class PostProcessor:
             writer = csv.DictWriter(file, fieldnames=data[0].keys(),delimiter=self.delimiter)
             writer.writeheader()
             writer.writerows(data)
-            print(f"Processed data written to {self.output_csv}")
+            print(f"Processed data written to {output_csv}")
         
     def _remove_one_header(self, field_value: str, header: str) -> str:
         def treat_hyphens(field_value: str) -> str:
