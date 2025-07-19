@@ -119,7 +119,11 @@ class CardRecognizer(ABC):
 
         image = self._correct_image_orientation(image)
 
-        ocr_results = self._do_ocr(image)
+        try:
+            ocr_results = self._do_ocr(image)
+        except Exception as e:
+            print(f"Warning: OCR failed for {filename}: {e}")
+            ocr_results = []
         
         assigned_texts = {"source_file": filename}
 
@@ -224,3 +228,7 @@ class PeroCardRecognizer(CardRecognizer):
             for line in result_region.lines:
                 parsed_results.append(OCRResult.from_pero_result(line,image.width,image.height))
         return parsed_results
+
+class MistralOCRRecognizer(CardRecognizer):
+    """Recognition using Mistral OCR"""
+    pass
