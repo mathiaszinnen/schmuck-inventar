@@ -23,6 +23,10 @@ dependencies = [
     "Levenshtein"
 ]
 
+optional-dependencies = [
+    pero = "pero-ocr"
+]
+
 [tool.setuptools]
 packages = ["schmuck_inventar"]
 include-package-data = true
