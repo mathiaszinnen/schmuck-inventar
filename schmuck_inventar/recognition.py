@@ -163,6 +163,7 @@ class MacOSCardRecognizer(CardRecognizer):
         super().__init__(layout_config)
 
     def _do_ocr(self, image):
+        from ocrmac import ocrmac
         ocrmac_results = ocrmac.OCR(image).recognize()
         results = []
         for ocrmac_result in ocrmac_results:
