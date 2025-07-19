@@ -113,7 +113,10 @@ class CardRecognizer(ABC):
             print("Image does not have EXIF data.")
         return image
 
-    def recognize(self, image, filename):
+    def recognize(self, image: Image, filename: str) -> dict[str, str]:
+        """Recognizes text in the image and assigns it to regions defined in the layout configuration.
+        returns a dictionary with region names as keys and recognized text as values."""
+
         image = self._correct_image_orientation(image)
 
         ocr_results = self._do_ocr(image)
