@@ -1,15 +1,12 @@
 from abc import ABC, abstractmethod
+import os
 from dataclasses import dataclass
-from typing import Any
+from schmuck_inventar.utils import download_and_unzip
 import platform
 import numpy as np
-import cv2
 from PIL import Image
 import yaml
 import random
-
-if platform.system() == 'Darwin':
-    from ocrmac import ocrmac
 
 @dataclass
 class OCRResult:
@@ -31,6 +28,22 @@ class OCRResult:
             y1=1 - box[1],  # top left corner is (0,0) in opencv, but (0,1) in ocrmac
             x2=box[0] + box[2],
             y2=(1 - box[1]) + box[3]
+        )
+
+    @staticmethod
+    def from_pero_result(result, imwidth, imheight):
+        """Construct an OCRResult instance from a pero ocr result."""
+        def to_rel_coordinates(polygon, imwidth, imheight):
+            """Convert absolute coordinates to relative coordinates."""
+            return np.array([[point[0] / imwidth, point[1] / imheight] for point in polygon])
+        polygon = to_rel_coordinates(result.polygon,imwidth,imheight)
+        return OCRResult(
+            text=result.transcription,
+            confidence=result.transcription_confidence,
+            x1=np.min(polygon[:, 0]),
+            y1=np.min(polygon[:, 1]),
+            x2=np.max(polygon[:, 0]),
+            y2=np.max(polygon[:, 1])
         )
 
 class CardRecognizer(ABC):
@@ -127,6 +140,21 @@ class CardRecognizer(ABC):
 
 
 class MacOSCardRecognizer(CardRecognizer):
+    def __init__(self, layout_config):
+        if platform.system() != 'Darwin':
+            raise ImportError(
+                "MacOSCardRecognizer requires macOS and the 'ocrmac' package. "
+                "Please run this on a Mac with 'ocrmac' installed."
+            )
+        try:
+            from ocrmac import ocrmac
+        except ImportError as e:
+            raise ImportError(
+                "The 'ocrmac' package is required for MacOSCardRecognizer. "
+                "Please install it using 'pip install ocrmac'."
+            ) from e
+        super().__init__(layout_config)
+
     def _do_ocr(self, image):
         ocrmac_results = ocrmac.OCR(image).recognize()
         results = []
@@ -154,17 +182,42 @@ class DummyCardRecognizer(CardRecognizer):
 
 class PeroCardRecognizer(CardRecognizer):
     """Recognition using pero ocr (https://github.com/DCGM/pero-ocr)."""
-    def __init__(self, layout_config):
+    def __init__(self, layout_config, app_dir):
         try:
-            import pero_ocr
+            from pero_ocr.user_scripts.parse_folder import PageParser
+            from configparser import ConfigParser
         except ImportError as e:
             raise ImportError(
                 "The 'pero_ocr' package is required for PeroCardRecognizer. "
                 "Please install it using 'pip install schmuck-inventar[pero]'"
             ) from e
+        resources_path = os.path.join(app_dir, "pero_ocr_resources")
+        self._prepare_resources(resources_path)
+        config = ConfigParser()
+        config.read(os.path.join(resources_path, 'config_cpu.ini'))
+        current_dir = os.getcwd()
+        os.chdir(resources_path)
+        self._page_parser = PageParser(config)
+        os.chdir(current_dir)
         super().__init__(layout_config)
 
+    def _prepare_resources(self, resources_path):
+        """Download and prepare the resources needed for Pero OCR."""
+        if os.path.exists(resources_path):
+            print(f"Using existing pero ocr resources at {resources_path}")
+            return
+        print(f"Downloading pero ocr resources to {resources_path}")
+        url = "https://nextcloud.fit.vutbr.cz/s/NtAbHTNkZFpapdJ/download/pero_eu_cz_print_newspapers_2022-09-26.zip"
+        download_and_unzip(url, resources_path)
+            
+
     def _do_ocr(self, image):
-        # Placeholder for Pero card recognition logic
-        # This should be replaced with actual OCR logic for Pero cards
-        return [OCRResult(text="Pero Card Example", confidence=0.9, x1=10, y1=10, x2=100, y2=100)]
+        from pero_ocr.core.layout import PageLayout
+        np_image = np.array(image.convert('RGB'))  # Convert PIL image to numpy array, ensure 3 channels
+        page_layout = PageLayout(id=0,page_size=(image.width, image.height))
+        parsed_results = []
+        pero_results = self._page_parser.process_page(np_image,page_layout)
+        for result_region in pero_results.regions: 
+            for line in result_region.lines:
+                parsed_results.append(OCRResult.from_pero_result(line,image.width,image.height))
+        return parsed_results

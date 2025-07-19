@@ -22,6 +22,10 @@ class PostProcessor:
             print(f"Processed data written to {self.output_csv}")
         
     def _remove_one_header(self, field_value: str, header: str) -> str:
+        def treat_hyphens(field_value: str) -> str:
+            # Replace all dash variants with a standard hyphen
+            return re.sub(r'[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D\-]', '-', field_value)
+        field_value = treat_hyphens(field_value)
         match = re.search(fr'{header}\s*:', field_value, re.IGNORECASE)
         if match:
             field_value = field_value[match.end():].strip()

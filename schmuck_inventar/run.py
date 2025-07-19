@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from schmuck_inventar.detection import YoloImageDetector, DummyDetector
-from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer
+from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer, PeroCardRecognizer
 from schmuck_inventar.postprocessor import SchmuckPostProcessor, BenchmarkingPostProcessor
 import platform
 import appdirs
@@ -11,18 +11,22 @@ import yaml
 import csv
 from tqdm import tqdm
 
-def pipeline(input_dir, output_dir, layout_config, eval_mode):
+def pipeline(input_dir, output_dir, layout_config, eval_mode, engine):
     print(f"Processing files in directory: {input_dir}")
 
     app_dir = appdirs.user_data_dir("schmuck_inventar")
-    if platform.system() == 'Darwin':
+    if engine == 'pero':
+        recognizer = PeroCardRecognizer(layout_config=layout_config, app_dir=app_dir)
+        print("Using PeroCardRecognizer, ensure you have 'pero-ocr' installed.")
+    elif engine == 'ocrmac':
         recognizer = MacOSCardRecognizer(layout_config=layout_config)
+        print("Using MacOSCardRecognizer, ensure you are running this on a Mac with 'ocrmac' installed.")
     else:
         recognizer = DummyCardRecognizer(layout_config=layout_config)
         print("Using dummy recognizer, as this is not a Mac system.")
     
     if eval_mode:
-        print("Running in evaluation mode, using dummy recognizer.")
+        print("Running in evaluation mode, using dummy detector.")
         detector = DummyDetector()
         postprocessor_class = BenchmarkingPostProcessor
     else:
@@ -81,6 +85,13 @@ def main():
         help="Path to the layout configuration file (YAML). Defaults to 'config/regions.yaml' relative to the project root."
     )
     parser.add_argument(
+        '--ocr_engine',
+        type=str,
+        choices=['ocrmac', 'pero', 'dummy'],
+        default='ocrmac',
+        help="Recognition engine to use: 'ocrmac', 'pero', or 'dummy'. Default is 'ocrmac'."
+    )
+    parser.add_argument(
         '--eval',
         action='store_true',
         help="If set, runs the pipeline in evaluation mode."
@@ -90,7 +101,7 @@ def main():
     input_dir = args.input_dir
     output_dir = args.output_dir
 
-    pipeline(input_dir, output_dir, args.layout_config, args.eval)
+    pipeline(input_dir, output_dir, args.layout_config, args.eval, args.ocr_engine)
 
     # Check if the input directory exists
     if not os.path.isdir(input_dir):

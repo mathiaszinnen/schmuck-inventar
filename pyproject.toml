@@ -25,7 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 pero = [
-    "pero-ocr"
+    "pero-ocr",
+    "configparser"
 ]
 
 [tool.setuptools]
