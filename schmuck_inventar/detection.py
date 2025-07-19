@@ -6,7 +6,23 @@ import torch
 import cv2
 import os
 
-class YoloImageDetector:
+
+class Detector:
+    """Abstract base class for different detector implementations."""
+    def parse_directory(self, input_dir, crop_dir='tmp', output_base_dir='output'):
+        """Parse a directory of images and save cropped images to the output directory."""
+        raise NotImplementedError("This method should be overridden by subclasses.")
+
+    def detect(self, image):
+        """Detect objects in a single image."""
+        raise NotImplementedError("This method should be overridden by subclasses.")
+
+    def crop_and_save(self, detections, out_dir, name):
+        """Crop detected objects and save them to the specified directory."""
+        raise NotImplementedError("This method should be overridden by subclasses.")
+
+
+class YoloImageDetector(Detector):
     def __init__(self, resources_path, chunk_size=50,
                  weights_url='https://faubox.rrze.uni-erlangen.de/dl/fi9iK4rseupfrrTeXWQUGP/weights.zip'):
         self._prepare_resources(resources_path, weights_url)
@@ -64,7 +80,7 @@ class YoloImageDetector:
             cv2.imwrite(os.path.join(out_dir, name),crop)
 
 
-class DummyDetector:
+class DummyDetector(Detector):
     def __init__(self, chunk_size=50):
         self.chunk_size = chunk_size
         print(f'Dummy detector doing nothing, OCR only.')

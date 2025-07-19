@@ -1,21 +1,16 @@
 from Levenshtein import distance
 import re
 import csv
-# import spacy
 
 class PostProcessor:
-    def __init__(self, input_csv, output_csv):
-        with open(input_csv, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            self.input_data = [row for row in reader]
-        self.output_csv = output_csv
+    def __init__(self):
         self.delimiter = ','  
 
-    def _write_to_csv(self, data):
+    def _write_to_csv(self, data, output_csv):
         """
         Write the processed data to a CSV file.
         """
-        with open(self.output_csv, mode='w', newline='', encoding='utf-8') as file:
+        with open(output_csv, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=data[0].keys(),delimiter=self.delimiter)
             writer.writeheader()
             writer.writerows(data)
@@ -45,21 +40,24 @@ class PostProcessor:
         """
         return row
 
-    def postprocess(self):
+    def postprocess(self, input_csv, output_csv):
         """
         Post-process the data after OCR.
         """
+        with open(input_csv, mode='r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            input_data = [row for row in reader]
         updated_data = []
-        for row in self.input_data:
+        for row in input_data:
             updated_row = self._remove_title_parts(row)
             updated_row = self._update_one_entry(updated_row)
             updated_data.append(updated_row)
         
-        self._write_to_csv(updated_data) 
+        self._write_to_csv(updated_data, output_csv) 
 
 class BenchmarkingPostProcessor(PostProcessor):
-    def __init__(self, input_csv, output_csv):
-        super().__init__(input_csv, output_csv)
+    def __init__(self):
+        super().__init__()
         self._empty_marker = ''
         print('Benchmarking postprocessor initialized.')
 
@@ -109,8 +107,9 @@ class BenchmarkingPostProcessor(PostProcessor):
         return updated_row
 
 class SchmuckPostProcessor(PostProcessor):
-    def __init__(self, input_csv, output_csv):
-        super().__init__(input_csv, output_csv)
+    def __init__(self):
+        print("Using SchmuckPostProcessor for production mode.")
+        super().__init__()
         self._empty_marker = 'Unbekannt'
         self.delimiter = ';'  # Use semicolon as delimiter for Schmuck CSV
         # spacy.cli.download("de_core_news_sm")

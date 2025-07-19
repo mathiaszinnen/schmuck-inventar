@@ -1,9 +1,9 @@
 import argparse
 import os
 import sys
-from schmuck_inventar.detection import YoloImageDetector, DummyDetector
-from schmuck_inventar.recognition import DummyCardRecognizer, MacOSCardRecognizer, PeroCardRecognizer
-from schmuck_inventar.postprocessor import SchmuckPostProcessor, BenchmarkingPostProcessor
+from schmuck_inventar.detection import Detector, YoloImageDetector, DummyDetector
+from schmuck_inventar.recognition import CardRecognizer, DummyCardRecognizer, MacOSCardRecognizer, PeroCardRecognizer
+from schmuck_inventar.postprocessor import PostProcessor, SchmuckPostProcessor, BenchmarkingPostProcessor
 import platform
 import appdirs
 from PIL import Image
@@ -11,27 +11,8 @@ import yaml
 import csv
 from tqdm import tqdm
 
-def pipeline(input_dir, output_dir, layout_config, eval_mode, engine):
+def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognizer: CardRecognizer, postprocessor: PostProcessor):
     print(f"Processing files in directory: {input_dir}")
-
-    app_dir = appdirs.user_data_dir("schmuck_inventar")
-    if engine == 'pero':
-        recognizer = PeroCardRecognizer(layout_config=layout_config, app_dir=app_dir)
-        print("Using PeroCardRecognizer, ensure you have 'pero-ocr' installed.")
-    elif engine == 'ocrmac':
-        recognizer = MacOSCardRecognizer(layout_config=layout_config)
-        print("Using MacOSCardRecognizer, ensure you are running this on a Mac with 'ocrmac' installed.")
-    else:
-        recognizer = DummyCardRecognizer(layout_config=layout_config)
-        print("Using dummy recognizer, as this is not a Mac system.")
-    
-    if eval_mode:
-        print("Running in evaluation mode, using dummy detector.")
-        detector = DummyDetector()
-        postprocessor_class = BenchmarkingPostProcessor
-    else:
-        detector = YoloImageDetector(resources_path=os.path.join(app_dir,"detection"))
-        postprocessor_class = SchmuckPostProcessor
     
     # Load layout configuration
     with open(layout_config, 'r') as config_file:
@@ -61,8 +42,51 @@ def pipeline(input_dir, output_dir, layout_config, eval_mode, engine):
         print(f"Raw extraction results written to {results_csv_raw}")
     
     final_csv_output = os.path.join(output_dir, 'results.csv')
-    postprocessor = postprocessor_class(results_csv_raw, final_csv_output)
-    postprocessor.postprocess()
+    postprocessor.postprocess(results_csv_raw, final_csv_output)
+
+
+def instantiate_recognizer(engine, layout_config, app_dir):
+    if engine == 'pero':
+        print("Using PeroCardRecognizer, ensure you have 'pero-ocr' installed.")
+        return PeroCardRecognizer(layout_config=layout_config, app_dir=app_dir)
+    elif engine == 'ocrmac':
+        if not platform.system() == 'Darwin':
+            raise ImportError(
+                "MacOSCardRecognizer requires macOS and the 'ocrmac' package. "
+                "Please run this on a Mac with 'ocrmac' installed."
+            )
+        print("Using MacOSCardRecognizer, ensure you are running this on a Mac with 'ocrmac' installed.")
+        return MacOSCardRecognizer(layout_config=layout_config)
+    elif engine == 'mistral':
+        print("Not implemented yet, but this is where you would instantiate MistralOCRRecognizer.")
+        return MistralOCRRecognizer(layout_config=layout_config, app_dir=app_dir)
+    elif engine == 'dummy':
+        # Dummy recognizer for rapid development
+        return DummyCardRecognizer(layout_config=layout_config)
+    else: # automatic selection based on platform
+        if platform.system() == 'Darwin':
+            print("Using MacOSCardRecognizer, ensure you are running this on a Mac with 'ocrmac' installed.")
+            return MacOSCardRecognizer(layout_config=layout_config)
+        else:
+            print("Using PeroCardRecognizer, ensure you have 'pero-ocr' installed.")
+            return PeroCardRecognizer(layout_config=layout_config, app_dir=app_dir)
+
+
+def instantiate_detector(eval_mode, app_dir):
+    if eval_mode:
+        print("Using DummyDetector for evaluation mode.")
+        return DummyDetector()
+    else:
+        print("Using YoloImageDetector for production mode.")
+        return YoloImageDetector(resources_path=os.path.join(app_dir, "detection"))
+
+def instantiate_postprocessor(eval_mode):
+    if eval_mode:
+        print("Using BenchmarkingPostProcessor for evaluation mode.")
+        return BenchmarkingPostProcessor()
+    else:
+        print("Using SchmuckPostProcessor for production mode.")
+        return SchmuckPostProcessor()
 
 def main():
     parser = argparse.ArgumentParser(description="Process input directory for Schmuck Inventar.")
@@ -87,9 +111,10 @@ def main():
     parser.add_argument(
         '--ocr_engine',
         type=str,
-        choices=['ocrmac', 'pero', 'dummy'],
-        default='ocrmac',
-        help="Recognition engine to use: 'ocrmac', 'pero', or 'dummy'. Default is 'ocrmac'."
+        choices=['auto','ocrmac', 'pero', 'dummy'],
+        default='auto',
+        help="Recognition engine to use: 'ocrmac', 'pero', or 'dummy'. Default is 'auto', " \
+        "which resolves to ocrmac when running on a mac system and pero else."
     )
     parser.add_argument(
         '--eval',
@@ -98,10 +123,15 @@ def main():
     )
     args = parser.parse_args()
 
+    app_dir = appdirs.user_data_dir("schmuck_inventar")
+    recognizer = instantiate_recognizer(args.ocr_engine, args.layout_config, app_dir)
+    detector = instantiate_detector(args.eval, app_dir)
+    postprocessor = instantiate_postprocessor(args.eval)
+
     input_dir = args.input_dir
     output_dir = args.output_dir
 
-    pipeline(input_dir, output_dir, args.layout_config, args.eval, args.ocr_engine)
+    pipeline(input_dir, output_dir, args.layout_config, detector, recognizer, postprocessor)
 
     # Check if the input directory exists
     if not os.path.isdir(input_dir):
