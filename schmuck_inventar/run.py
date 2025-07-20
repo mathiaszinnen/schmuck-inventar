@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from schmuck_inventar.detection import Detector, YoloImageDetector, DummyDetector
-from schmuck_inventar.recognition import CardRecognizer, DummyCardRecognizer, MacOSCardRecognizer, PeroCardRecognizer
+from schmuck_inventar.recognition import CardRecognizer, DummyCardRecognizer, MacOSCardRecognizer, PeroCardRecognizer, MistralOCRRecognizer
 from schmuck_inventar.postprocessor import PostProcessor, SchmuckPostProcessor, BenchmarkingPostProcessor
 import platform
 import appdirs
@@ -59,7 +59,7 @@ def instantiate_recognizer(engine, layout_config, app_dir):
         return MacOSCardRecognizer(layout_config=layout_config)
     elif engine == 'mistral':
         print("Not implemented yet, but this is where you would instantiate MistralOCRRecognizer.")
-        return MistralOCRRecognizer(layout_config=layout_config, app_dir=app_dir)
+        return MistralOCRRecognizer(layout_config=layout_config)
     elif engine == 'dummy':
         # Dummy recognizer for rapid development
         return DummyCardRecognizer(layout_config=layout_config)
@@ -111,7 +111,7 @@ def main():
     parser.add_argument(
         '--ocr_engine',
         type=str,
-        choices=['auto','ocrmac', 'pero', 'dummy'],
+        choices=['auto','ocrmac', 'pero', 'dummy','mistral'],
         default='auto',
         help="Recognition engine to use: 'ocrmac', 'pero', or 'dummy'. Default is 'auto', " \
         "which resolves to ocrmac when running on a mac system and pero else."

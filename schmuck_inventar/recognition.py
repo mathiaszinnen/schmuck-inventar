@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+import json
 import os
 from dataclasses import dataclass
-from schmuck_inventar.utils import download_and_unzip
+from schmuck_inventar.utils import download_and_unzip, pil_image_to_base64
 import platform
 import numpy as np
 from PIL import Image
@@ -232,4 +233,63 @@ class PeroCardRecognizer(CardRecognizer):
 
 class MistralOCRRecognizer(CardRecognizer):
     """Recognition using Mistral OCR"""
-    pass
+    def __init__(self, layout_config):
+        print("MistralOCRRecognizer instantiated.")
+        try:
+            from mistralai import Mistral
+        except ImportError as e:
+            raise ImportError(
+                "The 'mistral_ocr' package is required for MistralOCRRecognizer. "
+                "Please install it using 'pip install mistral-ocr'."
+            ) from e
+        api_key = self._get_api_key()
+        self.mistral_client = Mistral(api_key=api_key)
+        super().__init__(layout_config)
+        self._output_format = self._create_output_format()
+
+    def _get_api_key(self):
+        from dotenv import load_dotenv
+        """Get the Mistral API key from environment variables or a .env file."""
+        load_dotenv()
+        api_key = os.getenv('MISTRAL_API_KEY')
+        if not api_key:
+            raise ValueError("MISTRAL_API_KEY environment variable is not set.")
+        return api_key
+
+    def _create_output_format(self):
+        from mistralai.extra import response_format_from_pydantic_model
+        from pydantic import create_model
+        # todo: fix this
+        output_dict = {}
+        for region_name in self.layout_dict.keys():
+            output_dict[region_name] = (str, ...)#, description=f'The inventory field called {region_name}, specified in {region_name}')
+        output_format_model = create_model(
+            'OutputFormat',
+            **output_dict
+        )
+        return response_format_from_pydantic_model(output_format_model)
+
+    def recognize(self, image, filename):
+        # override the recognize method since region assignment is covered by Mistral 
+        image = self._correct_image_orientation(image)
+
+        ocr_response = self._do_ocr(image)
+        result_json = json.loads(ocr_response.document_annotation)
+        return result_json 
+        
+
+    def _do_ocr(self, image):
+        img_base64 = pil_image_to_base64(image)
+        print(f"Sending image to Mistral OCR: {img_base64[:30]}...")  # Print first 30 chars for brevity
+        ocr_response = self.mistral_client.ocr.process(
+            model = "mistral-ocr-latest",
+            document = {
+                "type": "image_url",
+                "image_url": f"data:image/jpeg;base64,{img_base64}"
+            },
+            include_image_base64=True,
+            document_annotation_format=self._output_format
+        )
+        print(f"Received OCR response: {ocr_response}")
+        return ocr_response
+

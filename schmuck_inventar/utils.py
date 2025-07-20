@@ -4,6 +4,8 @@ import zipfile
 import io
 import os
 from tqdm import tqdm
+import base64
+from PIL import Image
 
 def download_and_unzip(url, extract_to):
     response = requests.get(url, stream=True)  # Set stream to True to retrieve the content in chunks
@@ -28,3 +30,9 @@ def download_and_unzip(url, extract_to):
                 target_path = os.path.join(extract_to, os.path.basename(member.filename))
                 with zip_file.open(member) as source_file, open(target_path, 'wb') as target_file:
                     shutil.copyfileobj(source_file, target_file)
+
+def pil_image_to_base64(image: Image.Image) -> str:
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    img_bytes = buffered.getvalue()
+    return base64.b64encode(img_bytes).decode("utf-8")

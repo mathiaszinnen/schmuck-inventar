@@ -28,6 +28,10 @@ pero = [
     "pero-ocr",
     "configparser"
 ]
+mistral = [
+    "mistralai",
+    "dotenv"
+]
 
 [tool.setuptools]
 packages = ["schmuck_inventar"]
