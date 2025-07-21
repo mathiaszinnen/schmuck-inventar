@@ -263,6 +263,7 @@ class MistralOCRRecognizer(CardRecognizer):
         output_dict = {}
         for region_name in self.layout_dict.keys():
             output_dict[region_name] = (str, ...)#, description=f'The inventory field called {region_name}, specified in {region_name}')
+        output_dict['Gewicht'] = (str, ...)  # Dirty hack to enable separate weight extraction for Mistral TODO: find more generic solution
         output_format_model = create_model(
             'OutputFormat',
             **output_dict
