@@ -267,13 +267,19 @@ class MistralOCRRecognizer(CardRecognizer):
             'OutputFormat',
             **output_dict
         )
+        response_format = response_format_from_pydantic_model(output_format_model)
         return response_format_from_pydantic_model(output_format_model)
 
     def recognize(self, image, filename):
         # override the recognize method since region assignment is covered by Mistral 
         image = self._correct_image_orientation(image)
 
-        ocr_response = self._do_ocr(image)
+        try:
+            ocr_response = self._do_ocr(image)
+        except Exception as e:
+            print(f"Warning: OCR failed for {filename}: {e}")
+            return {'source_file': filename}
+
         result_json = json.loads(ocr_response.document_annotation)
         return result_json 
         
@@ -290,6 +296,5 @@ class MistralOCRRecognizer(CardRecognizer):
             include_image_base64=True,
             document_annotation_format=self._output_format
         )
-        print(f"Received OCR response: {ocr_response}")
         return ocr_response
 
