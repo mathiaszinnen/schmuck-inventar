@@ -272,7 +272,8 @@ class MistralOCRRecognizer(CardRecognizer):
         return response_format_from_pydantic_model(output_format_model)
 
     def recognize(self, image, filename):
-        # override the recognize method since region assignment is covered by Mistral 
+        """Recognition based on Mistral OCR API. Note that this does not use batch processing which would be cheaper and quicker.
+        override the recognize method since region assignment is covered by Mistral """
         image = self._correct_image_orientation(image)
 
         try:

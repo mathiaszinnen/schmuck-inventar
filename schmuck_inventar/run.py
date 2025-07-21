@@ -58,7 +58,6 @@ def instantiate_recognizer(engine, layout_config, app_dir):
         print("Using MacOSCardRecognizer, ensure you are running this on a Mac with 'ocrmac' installed.")
         return MacOSCardRecognizer(layout_config=layout_config)
     elif engine == 'mistral':
-        print("Not implemented yet, but this is where you would instantiate MistralOCRRecognizer.")
         return MistralOCRRecognizer(layout_config=layout_config)
     elif engine == 'dummy':
         # Dummy recognizer for rapid development
