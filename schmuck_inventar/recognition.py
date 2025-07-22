@@ -289,7 +289,6 @@ class MistralOCRRecognizer(CardRecognizer):
 
     def _do_ocr(self, image):
         img_base64 = pil_image_to_base64(image)
-        print(f"Sending image to Mistral OCR: {img_base64[:30]}...")  # Print first 30 chars for brevity
         ocr_response = self.mistral_client.ocr.process(
             model = "mistral-ocr-latest",
             document = {
