@@ -23,7 +23,7 @@ def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognize
     os.makedirs(output_dir, exist_ok=True)
 
     with open(results_csv_raw, mode='w', newline='', encoding='utf-8') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=['source_file'] + list(layout_keys))
+        csv_writer = csv.DictWriter(csv_file, fieldnames=['source_file', 'Gewicht'] + list(layout_keys)) # Adding Gewicht manually to make Mistral OCR work, TODO: find generic solution
         csv_writer.writeheader()
 
         for filename in tqdm(os.listdir(input_dir)):
@@ -37,7 +37,7 @@ def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognize
 
             # Write raw results to CSV
             row = {'source_file': filename}
-            row.update({key: results.get(key, '') for key in layout_keys})
+            row.update({key: results.get(key, '') for key in results.keys()})
             csv_writer.writerow(row)
         print(f"Raw extraction results written to {results_csv_raw}")
     
