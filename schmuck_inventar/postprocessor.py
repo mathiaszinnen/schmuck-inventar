@@ -63,7 +63,7 @@ class BenchmarkingPostProcessor(PostProcessor):
 
     def _handle_masse(self, row: dict) -> str:
         if 'Gewicht' in row and row['Gewicht'] != '' and 'Maße' in row:
-            return row['Gewicht'], row['Maße'] # treat cases where gewicht is handled by ocr engine (ie Mistral)
+            return row['Maße'], row['Gewicht'] # treat cases where gewicht is handled by ocr engine (ie Mistral)
         masse_str = row.get('Maße', '')    
         # Extract all cohesive numbers before 'g' as weight, others as measurement
         weights = []

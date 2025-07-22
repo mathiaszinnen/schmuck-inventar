@@ -237,13 +237,15 @@ class MistralOCRRecognizer(CardRecognizer):
         print("MistralOCRRecognizer instantiated.")
         try:
             from mistralai import Mistral
+            # from mistralai.retries import RetryConfig, BackoffStrategy
         except ImportError as e:
             raise ImportError(
                 "The 'mistral_ocr' package is required for MistralOCRRecognizer. "
                 "Please install it using 'pip install mistral-ocr'."
             ) from e
         api_key = self._get_api_key()
-        self.mistral_client = Mistral(api_key=api_key)
+        # retry_config = RetryConfig('backoff', BackoffStrategy(500, 60000, 1.5, 300000))
+        self.mistral_client = Mistral(api_key=api_key,  timeout_ms=120000)
         super().__init__(layout_config)
         self._output_format = self._create_output_format()
 
@@ -259,7 +261,6 @@ class MistralOCRRecognizer(CardRecognizer):
     def _create_output_format(self):
         from mistralai.extra import response_format_from_pydantic_model
         from pydantic import create_model
-        # todo: fix this
         output_dict = {}
         for region_name in self.layout_dict.keys():
             output_dict[region_name] = (str, ...)#, description=f'The inventory field called {region_name}, specified in {region_name}')
