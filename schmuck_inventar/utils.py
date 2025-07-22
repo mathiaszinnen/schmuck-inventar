@@ -1,4 +1,5 @@
 import requests
+import json
 import shutil
 import zipfile
 import io
@@ -36,3 +37,19 @@ def pil_image_to_base64(image: Image.Image) -> str:
     image.save(buffered, format="PNG")
     img_bytes = buffered.getvalue()
     return base64.b64encode(img_bytes).decode("utf-8")
+
+def dict_from_markdown(md_string: str) -> dict[str,str]:
+    md_lines = md_string.split('\n')
+
+    pass
+
+def test():
+    output_path = '/home/mathias/development/schmuck-inventar/output.jsonl'
+    with open(output_path) as f:
+        output_lines = list(f)
+    output = json.loads(output_lines[0])
+    md_string = output['response']['body']['pages'][0]['markdown']
+    result = dict_from_markdown(md_string)
+    print(md_string)
+
+test()

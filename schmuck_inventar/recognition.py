@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import time
+from io import BytesIO
 import json
 import os
 from dataclasses import dataclass
@@ -114,32 +116,38 @@ class CardRecognizer(ABC):
             print("Image does not have EXIF data.")
         return image
 
-    def recognize(self, image: Image, filename: str) -> dict[str, str]:
-        """Recognizes text in the image and assigns it to regions defined in the layout configuration.
-        returns a dictionary with region names as keys and recognized text as values."""
+    def recognize(self, image_batch: list[Image, str]) -> list[dict[str, str]]:
+        """
+        Recognizes text in a batch of images and assigns it to regions defined in the layout configuration.
+        Args:
+            image_batch (list[tuple[Image, str]]): A list where each element is a tuple containing a PIL Image and its corresponding filename.
+        Returns:
+            list[dict[str, str]]: A list of dictionaries, each mapping region names to recognized text for each image in the batch. Each dictionary also includes the source filename under the key 'source_file'.
+        """
+        results = []
+        for image, filename in image_batch:
+            image = self._correct_image_orientation(image)
 
-        image = self._correct_image_orientation(image)
+            try:
+                ocr_results = self._do_ocr(image)
+            except Exception as e:
+                print(f"Warning: OCR failed for {filename}: {e}")
+                ocr_results = []
+            
+            assigned_texts = {"source_file": filename}
 
-        try:
-            ocr_results = self._do_ocr(image)
-        except Exception as e:
-            print(f"Warning: OCR failed for {filename}: {e}")
-            ocr_results = []
-        
-        assigned_texts = {"source_file": filename}
+            for ocr_result in ocr_results:
+                region_name = self._assign_region(ocr_result, self.layout_dict)
+                if not region_name:
+                    print(f"Warning: No region assigned for OCR result: {ocr_result.text}")
+                    continue
+                if region_name in assigned_texts:
+                    assigned_texts[region_name] += ' ' + ocr_result.text
+                else:
+                    assigned_texts[region_name] = ocr_result.text
 
-        for ocr_result in ocr_results:
-            region_name = self._assign_region(ocr_result, self.layout_dict)
-            if not region_name:
-                print(f"Warning: No region assigned for OCR result: {ocr_result.text}")
-                continue
-            if region_name in assigned_texts:
-                assigned_texts[region_name] += ' ' + ocr_result.text
-            else:
-                assigned_texts[region_name] = ocr_result.text
-
-        return assigned_texts
-        
+            results.append(assigned_texts)
+        return results
 
     @abstractmethod
     def _do_ocr(self, image: Image) -> list[OCRResult]:
@@ -246,6 +254,7 @@ class MistralOCRRecognizer(CardRecognizer):
         self.mistral_client = Mistral(api_key=api_key)
         super().__init__(layout_config)
         self._output_format = self._create_output_format()
+        self._batch_counter = 0
 
     def _get_api_key(self):
         from dotenv import load_dotenv
@@ -257,46 +266,121 @@ class MistralOCRRecognizer(CardRecognizer):
         return api_key
 
     def _create_output_format(self):
-        from mistralai.extra import response_format_from_pydantic_model
-        from pydantic import create_model
-        # todo: fix this
+        # from mistralai.extra import response_format_from_pydantic_model
+        # from pydantic import create_model
+        # output_dict = {}
+        # for region_name in self.layout_dict.keys():
+        #     output_dict[region_name] = (str, ...)#, description=f'The inventory field called {region_name}, specified in {region_name}')
+        # output_dict['Gewicht'] = (str, ...)  # Dirty hack to enable separate weight extraction for Mistral TODO: find more generic solution
+        # output_format_model = create_model(
+        #     'OutputFormat',
+        #     **output_dict
+        # )
+        # return response_format_from_pydantic_model(output_format_model)
         output_dict = {}
         for region_name in self.layout_dict.keys():
-            output_dict[region_name] = (str, ...)#, description=f'The inventory field called {region_name}, specified in {region_name}')
-        output_dict['Gewicht'] = (str, ...)  # Dirty hack to enable separate weight extraction for Mistral TODO: find more generic solution
-        output_format_model = create_model(
-            'OutputFormat',
-            **output_dict
-        )
-        response_format = response_format_from_pydantic_model(output_format_model)
-        return response_format_from_pydantic_model(output_format_model)
-
-    def recognize(self, image, filename):
+            output_dict[region_name] = {
+                "title": region_name,
+                "type": "string"
+            }
+        return output_dict
+        
+    def recognize(self, batch):
         """Recognition based on Mistral OCR API. Note that this does not use batch processing which would be cheaper and quicker.
         override the recognize method since region assignment is covered by Mistral """
-        image = self._correct_image_orientation(image)
 
         try:
-            ocr_response = self._do_ocr(image)
+            ocr_response = self._do_ocr(batch)
         except Exception as e:
-            print(f"Warning: OCR failed for {filename}: {e}")
-            return {'source_file': filename}
+            filenames = [filename for _, filename in batch]
+            print(f"Warning: OCR failed for {filenames}: {e}")
+            return [{'source_file': filename} for _, filename in batch]
+
 
         result_json = json.loads(ocr_response.document_annotation)
         return result_json 
         
 
-    def _do_ocr(self, image):
-        img_base64 = pil_image_to_base64(image)
-        print(f"Sending image to Mistral OCR: {img_base64[:30]}...")  # Print first 30 chars for brevity
-        ocr_response = self.mistral_client.ocr.process(
-            model = "mistral-ocr-latest",
+    def _create_input_file(self, batch):
+        from mistralai import File
+        buffer = BytesIO()
+        for idx, (image, filename) in enumerate((batch)):
+            image = self._correct_image_orientation(image)
+            img_base64 = pil_image_to_base64(image)
             document = {
                 "type": "image_url",
-                "image_url": f"data:image/jpeg;base64,{img_base64}"
-            },
-            include_image_base64=True,
-            document_annotation_format=self._output_format
-        )
-        return ocr_response
+                "image_url": f"data:image/jpeg;base64,{img_base64}",
+            }
+            document_annotation_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "schema": self._output_format,
+                    "name": "document_annotation",
+                    "strict": True
+                }
+            }
+            request = {
+                "custom_id": str(idx),
+                "body": {
+                    "model": "mistral-ocr-latest",
+                    "document": document,
+                    "document_annotation_format": document_annotation_format
+                }
+            }
 
+            buffer.write(json.dumps(request).encode("utf-8"))
+            buffer.write("\n".encode("utf-8"))
+        return self.mistral_client.files.upload(file=File(file_name="file.jsonl", content=buffer.getvalue()), purpose="batch")
+
+
+    def _print_stats(self,batch_job):
+        """
+        Print the statistics of the batch job.
+
+        Args:
+            batch_job: The batch job object containing job statistics.
+        """
+
+    def _do_ocr(self, batch):
+        from mistralai import TextChunk
+        """Perform OCR on a batch of images using Mistral OCR API."""
+        self._batch_counter += 1
+        batch_data = self._create_input_file(batch)
+        batch_job = self.mistral_client.batch.jobs.create(
+            input_files=[batch_data.id],
+            model="mistral-ocr-latest",
+            endpoint='/v1/ocr',
+            metadata={
+                "job_type": f"ocr_batch_{self._batch_counter}",
+            }
+        )
+        while batch_job.status in ["QUEUED", "RUNNING"]:
+            batch_job = self.mistral_client.batch.jobs.get(job_id=batch_job.id)
+            self._print_stats(batch_job)
+            time.sleep(5)
+        if batch_job.status != "SUCCESS":
+            raise RuntimeError(f"Batch job failed with status: {batch_job.status}.")
+        output_file = self.mistral_client.files.download(file_id=batch_job.output_file)
+        output_file.read()
+
+        output_markdown = output_file.json()['response']['body']['pages'][0]['markdown']
+        chat_response = self.mistral_client.chat.parse(
+        model="ministral-8b-latest",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    TextChunk(text=(
+                        f"This is the image's OCR in markdown:\n{output_markdown}\n.\n"
+                        "Convert this into a structured JSON response "
+                        "with the OCR contents in a sensible dictionnary."
+                        )
+                    )
+                ]
+            }
+        ],
+        response_format={"type": "json_object"},
+        temperature=0
+        )
+        response_dict = json.loads(chat_response.choices[0].message.content)
+        return response_dict

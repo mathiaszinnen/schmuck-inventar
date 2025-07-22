@@ -11,7 +11,7 @@ import yaml
 import csv
 from tqdm import tqdm
 
-def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognizer: CardRecognizer, postprocessor: PostProcessor):
+def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognizer: CardRecognizer, postprocessor: PostProcessor, batch_size=1):
     print(f"Processing files in directory: {input_dir}")
     
     # Load layout configuration
@@ -22,23 +22,33 @@ def pipeline(input_dir, output_dir, layout_config, detector: Detector, recognize
     results_csv_raw = os.path.join(output_dir, 'results_raw.csv')
     os.makedirs(output_dir, exist_ok=True)
 
+    valid_extensions = ('.png', '.jpg', '.jpeg', '.tiff', '.bmp')
+    image_files = [f for f in os.listdir(input_dir) if f.lower().endswith(valid_extensions)]
+
     with open(results_csv_raw, mode='w', newline='', encoding='utf-8') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=['source_file'] + list(layout_keys))
         csv_writer.writeheader()
 
-        for filename in tqdm(os.listdir(input_dir)):
-            if not filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')):
-                continue
-            file_path = os.path.join(input_dir, filename)
-            image = Image.open(file_path)
-            detections = detector.detect(image)
-            detector.crop_and_save(detections, os.path.join(output_dir, 'images'), filename)
-            results = recognizer.recognize(image, filename)
+        for i in tqdm(range(0, len(image_files), batch_size), desc="Processing files"):
+            batch_files = image_files[i:i+batch_size]
+            batch_images = []
+            for filename in batch_files:
+                file_path = os.path.join(input_dir, filename)
+                image = Image.open(file_path)
+                batch_images.append((image, filename))
 
-            # Write raw results to CSV
-            row = {'source_file': filename}
-            row.update({key: results.get(key, '') for key in layout_keys})
-            csv_writer.writerow(row)
+            for image, filename in batch_images: # can be batched at some point
+                detections = detector.detect(image)
+                detector.crop_and_save(detections, os.path.join(output_dir, 'images'), filename)
+            
+            results = recognizer.recognize(batch_images)
+
+            for filename, result in zip(batch_files, results):
+                # Write raw results to CSV
+                row = {'source_file': filename}
+                row.update({key: result.get(key, '') for key in layout_keys})
+                csv_writer.writerow(row)
+
         print(f"Raw extraction results written to {results_csv_raw}")
     
     final_csv_output = os.path.join(output_dir, 'results.csv')
@@ -119,6 +129,12 @@ def main():
         '--eval',
         action='store_true',
         help="If set, runs the pipeline in evaluation mode."
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=1,
+        help="Number of files to process in a batch. Defaults to 1 (no batching)."
     )
     args = parser.parse_args()
 
