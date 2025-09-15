@@ -73,9 +73,9 @@ def instantiate_recognizer(engine, layout_config, app_dir, pagexml_path):
             return PeroCardRecognizer(layout_config=layout_config, app_dir=app_dir)
 
 
-def instantiate_detector(eval_mode, app_dir):
-    if eval_mode:
-        print("Using DummyDetector for evaluation mode.")
+def instantiate_detector(no_detect, app_dir):
+    if no_detect:
+        print("Using DummyDetector.")
         return DummyDetector()
     else:
         print("Using YoloImageDetector for production mode.")
@@ -128,12 +128,20 @@ def main():
         action='store_true',
         help="If set, runs the pipeline in evaluation mode."
     )
+    parser.add_argument(
+        '--no_detect',
+        action='store_true',
+        help="If set, skips the detection and cropping of photographs on the photographs."
+    )
     args = parser.parse_args()
+    no_detect=False
+    if args.eval or args.no_detect:
+        no_detect=True
     if args.ocr_engine == 'pagexml' and not args.pagexml_dir:
         raise ValueError("When --ocr_engine is 'pagexml', you must specify --pagexml_dir.")
     app_dir = appdirs.user_data_dir("schmuck_inventar")
     recognizer = instantiate_recognizer(args.ocr_engine, args.layout_config, app_dir, args.pagexml_dir)
-    detector = instantiate_detector(args.eval, app_dir)
+    detector = instantiate_detector(no_detect, app_dir)
     postprocessor = instantiate_postprocessor(args.eval)
 
     input_dir = args.input_dir
