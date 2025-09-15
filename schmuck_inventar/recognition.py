@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 import yaml
 import random
+import xml.etree.ElementTree as ET
 
 @dataclass
 class OCRResult:
@@ -300,3 +301,17 @@ class MistralOCRRecognizer(CardRecognizer):
         )
         return ocr_response
 
+class PageXMLRecognizer(CardRecognizer):
+    """Recognizer to read XML results exported with other tools (e.g. ScribbleSense)"""
+    def __init__(self, layout_config, pagexml_path):
+        self.pagexml_dir = pagexml_path
+        self.pagexml_files = os.listdir(pagexml_path)
+
+    def _do_ocr(self, image):
+        image_fn = image.filename
+        pagexml_fn = os.path.splitext(image_fn)[0] + '.xml'
+        if pagexml_fn not in self.pagexml_files:
+            raise RuntimeError(f"No pagexml file found for {image_fn}.")
+        pagexml = os.path.join(self.pagexml_dir)
+        root = ET.parse(pagexml)
+        print('debug')
